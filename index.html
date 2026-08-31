@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- VISTA PREVIA AL COMPARTIR EN REDES SOCIALES (WHATSAPP, DISCORD, TELEGRAM, TWITTER) -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Feral Wars">
+  <meta property="og:description"
+    content="¡Comanda facciones animales, construye tu mazo de leyenda y destruye los Reinos enemigos en duelos tácticos en vivo!">
+  <meta property="og:image" content="assets/og_preview.jpeg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:site_name" content="Feral Wars TCG">
+
+  <!-- TWITTER CARDS -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Feral Wars TCG - Juego de Cartas Coleccionables">
+  <meta name="twitter:description"
+    content="¡Comanda facciones animales, construye tu mazo de leyenda y destruye los Reinos enemigos en duelos tácticos en vivo!">
+  <meta name="twitter:image" content="assets/og_preview.jpeg">
+
+  <title>Feral Wars - TCG PC Multijugador</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- PEERJS PARA CONEXIÓN P2P ONLINE SIN SERVIDOR -->
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+</head>
+
+<body>
+  <div id="app">
+    <!-- PANEL EXTRA DECK REMOVIDO -->
+
+    <!-- CAMPO DE BATALLA PRINCIPAL -->
+    <div class="battlefield-container">
+
+
+
+      <!-- BARRAS DE JUGADOR ENEMIGO -->
+      <div class="player-bar enemy-bar">
+        <div class="player-info">
+          <div class="hive-avatar" id="enemy-hive" title="Colmena Enemiga (Haz clic para atacar)">
+            🐝
+          </div>
+          <div>
+            <div class="player-name" id="enemy-name-display">Reino Enemigo</div>
+            <div class="hp-container">
+              <div class="hp-text">Vida: <span id="enemy-hp">30 / 30</span></div>
+              <div class="hp-bar-bg">
+                <div class="hp-bar-fill" id="enemy-hp-bar" style="width: 100%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ZONA DE TRAMPAS ENEMIGAS -->
+        <div class="traps-container" id="enemy-traps" title="Trampas Enemigas Ocultas"></div>
+
+        <div class="nectar-container">
+          💧 Néctar: <span id="enemy-nectar">1 / 1</span>
+        </div>
+      </div>
+
+      <!-- ZONA DE TABLEROS (ENEMIGO Y JUGADOR) -->
+      <div class="board-zone">
+        <div class="board-row" id="enemy-board">
+          <span class="board-label">CAMPO ENEMIGO</span>
+        </div>
+
+        <div class="board-row" id="player-board">
+          <span class="board-label">TU CAMPO</span>
+        </div>
+      </div>
+
+      <!-- MANO Y CONTROLES DEL JUGADOR -->
+      <div class="player-bar player-bar-user">
+        <div class="player-info">
+          <div class="hive-avatar" id="player-hive">
+            🐜
+          </div>
+          <div>
+            <div class="player-name">Tu Reino</div>
+            <div class="hp-container">
+              <div class="hp-text">Vida: <span id="player-hp">30 / 30</span></div>
+              <div class="hp-bar-bg">
+                <div class="hp-bar-fill" id="player-hp-bar" style="width: 100%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ZONA DE TUS TRAMPAS OCULTAS -->
+        <div class="traps-container" id="player-traps" title="Tus Trampas Ocultas Activadas"></div>
+
+        <!-- CARTAS EN MANO -->
+        <div class="hand-container" id="player-hand"></div>
+
+        <div class="turn-control" style="display: flex; align-items: center; gap: 10px;">
+          <div class="nectar-container">
+            ⚡ Energía: <span id="player-nectar">1 / 1</span>
+          </div>
+          <button class="btn-end-turn" id="btn-end-turn" onclick="endTurn()">
+            FINALIZAR TURNO
+          </button>
+          <button class="btn-end-turn"
+            style="background: rgba(231, 76, 60, 0.3); border-color: var(--accent-red); color: #ff6b6b;"
+            onclick="exitDuelToMenu()">
+            🚪 SALIR
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- PANEL LATERAL: HISTORIAL DE BATALLA Y GLOSARIO DE EFECTOS -->
+    <div class="sidebar">
+      <div class="sidebar-tabs">
+        <button class="tab-btn active" id="tab-log" onclick="switchSidebarTab('log')">📜 Batalla</button>
+        <button class="tab-btn" id="tab-glossary" onclick="switchSidebarTab('glossary')">📖 Guía de Efectos</button>
+      </div>
+
+      <!-- CONTENIDO REGISTRO DE BATALLA -->
+      <div id="panel-log" class="tab-content active">
+        <div class="log-container" id="log-container"></div>
+        <div class="emote-bar">
+          <button class="btn-emote" onclick="sendEmote('🐝 ¡Por la Colmena!')">🐝</button>
+          <button class="btn-emote" onclick="sendEmote('⚡ ¡Sentirás el aguijón!')">⚡</button>
+          <button class="btn-emote" onclick="sendEmote('🔥 ¡Excelente jugada!')">🔥</button>
+        </div>
+      </div>
+
+      <!-- CONTENIDO GLOSARIO DE EFECTOS Y PALABRAS CLAVE -->
+      <div id="panel-glossary" class="tab-content">
+        <div class="glossary-container">
+          <div class="glossary-item">
+            <span class="glossary-icon">🏛️</span>
+            <div>
+              <div class="glossary-title">DECK EXTRA (Comandantes)</div>
+              <div class="glossary-desc">Tienes de 3 a 5 **Comandantes Leyenda** a la izquierda a los que puedes acceder
+                e invocar cuando tengas el Néctar.</div>
+            </div>
+          </div>
+
+          <div class="glossary-item">
+            <span class="glossary-icon">⚔️</span>
+            <div>
+              <div class="glossary-title">DOBLE ATAQUE (Double Attack)</div>
+              <div class="glossary-desc">La criatura puede **atacar 2 veces** en un mismo turno.</div>
+            </div>
+          </div>
+
+          <div class="glossary-item">
+            <span class="glossary-icon">⚡</span>
+            <div>
+              <div class="glossary-title">PRISA (Haste)</div>
+              <div class="glossary-desc">La criatura puede **atacar inmediatamente** en el mismo turno en que entra al
+                campo.</div>
+            </div>
+          </div>
+
+          <div class="glossary-item">
+            <span class="glossary-icon">🛡️</span>
+            <div>
+              <div class="glossary-title">PROVOCAR (Taunt)</div>
+              <div class="glossary-desc">El enemigo **debe atacar a esta criatura** antes de poder atacar a la Colmena u
+                otras cartas.</div>
+            </div>
+          </div>
+
+          <div class="glossary-item">
+            <span class="glossary-icon">🦅</span>
+            <div>
+              <div class="glossary-title">VUELO (Flying)</div>
+              <div class="glossary-desc">Ignora a los enemigos con Provocar y puede **atacar directamente a la
+                Colmena**.</div>
+            </div>
+          </div>
+
+          <div class="glossary-item">
+            <span class="glossary-icon">☠️</span>
+            <div>
+              <div class="glossary-title">VENENO (Poisonous)</div>
+              <div class="glossary-desc">Cualquier cantidad de daño que inflija a una criatura enemiga la **destruye
+                instantáneamente**.</div>
+            </div>
+          </div>
+
+          <div class="glossary-item">
+            <span class="glossary-icon">🍏</span>
+            <div>
+              <div class="glossary-title">GRITO DE GUERRA</div>
+              <div class="glossary-desc">Efecto especial e inmediato que se activa **al jugar la carta** (ej. cura la
+                colmena o daña un objetivo).</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL SELECTOR DE MODO DE JUEGO (LOBBY MULTIJUGADOR) -->
+  <div class="modal-overlay" id="lobby-overlay">
+    <div class="modal-content lobby-card">
+      <div class="modal-title" style="color: var(--accent-gold);">FERAL WARS</div>
+      <div class="modal-text">Selecciona el modo de juego o diseña tu mazo principal</div>
+
+      <div class="lobby-options">
+        <button class="btn-lobby-mode builder-btn" onclick="openDeckBuilder()">
+          🛠️ CONSTRUIR MAZO PRINCIPAL
+        </button>
+
+        <button class="btn-lobby-mode"
+          style="border-color: #9b59b6; color: #d5a6bd; box-shadow: 0 0 15px rgba(155, 89, 182, 0.3);"
+          onclick="openAvatarSelectModal()">
+          👤 ELIGE TU AVATAR DE REINO
+        </button>
+
+        <button class="btn-lobby-mode story-btn"
+          style="border-color: var(--accent-gold); color: var(--accent-gold); box-shadow: 0 0 15px rgba(243, 156, 18, 0.3);"
+          onclick="startStoryMode()">
+          📜 MODO HISTORIA (CAPÍTULO 1)
+        </button>
+
+
+        <button class="btn-lobby-mode"
+          style="border-color: #3498db; color: #bdc3c7; box-shadow: 0 0 15px rgba(52, 152, 219, 0.3);"
+          onclick="openGameManualModal()">
+          📖 VER MANUAL Y REGLAS DEL JUEGO
+        </button>
+
+        <button class="btn-lobby-mode" onclick="startSinglePlayer()">
+          🤖 MODO PRACTICAR (VS IA)
+        </button>
+
+        <div class="lobby-divider">--- O MULTIJUGADOR ONLINE P2P ---</div>
+
+        <button class="btn-lobby-mode host-btn" onclick="createP2pRoom()">
+          👑 CREAR SALA MULTIJUGADOR
+        </button>
+
+        <div id="lobby-status"></div>
+
+        <div class="join-box">
+          <input type="text" id="join-code-input" placeholder="Ej: INSECTO-4821" style="text-transform: uppercase;">
+          <button class="btn-join" onclick="joinP2pRoom()">🔗 UNIRSE A SALA</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CREADOR DE MAZOS (DECK BUILDER Y DECK EXTRA) -->
+  <div class="modal-overlay" id="deck-builder-overlay" style="display: none;">
+    <div class="modal-content db-modal">
+      <div class="db-header">
+        <div class="db-title">🛠️ CONSTRUCTOR DE MAZOS DE FERAL WARS</div>
+
+        <div style="display: flex; gap: 10px; align-items: center;">
+
+
+          <button id="btn-toggle-dev-mode" class="tab-btn" onclick="toggleDevModeUnlocked()"
+            style="background: rgba(243, 156, 18, 0.15); border: 2px solid var(--accent-gold); color: var(--accent-gold); font-weight: bold; padding: 6px 12px; margin-left: 10px;">
+            🔒 Mis Cartas Desbloqueadas
+          </button>
+        </div>
+
+        <div class="db-gauge"><span id="db-deck-count">Principal: 15 / 15</span></div>
+      </div>
+
+      <!-- BARRA DE FILTROS Y ORDENAMIENTO -->
+      <div class="db-filters-bar">
+        <div class="db-filter-group">
+          <span>Coste:</span>
+          <button class="db-filter-cost active" data-cost="ALL" onclick="setCostFilter('ALL')">TODOS</button>
+          <button class="db-filter-cost" data-cost="1" onclick="setCostFilter('1')">1</button>
+          <button class="db-filter-cost" data-cost="2" onclick="setCostFilter('2')">2</button>
+          <button class="db-filter-cost" data-cost="3" onclick="setCostFilter('3')">3</button>
+          <button class="db-filter-cost" data-cost="4" onclick="setCostFilter('4')">4</button>
+          <button class="db-filter-cost" data-cost="5" onclick="setCostFilter('5')">5</button>
+          <button class="db-filter-cost" data-cost="6" onclick="setCostFilter('6')">6+</button>
+        </div>
+
+        <div class="db-filter-group">
+          <span>Habilidad:</span>
+          <button class="db-filter-kw active" data-kw="ALL" onclick="setKeywordFilter('ALL')">TODAS</button>
+          <button class="db-filter-kw" data-kw="DOBLE_ATAQUE" onclick="setKeywordFilter('DOBLE_ATAQUE')">⚔️ DOBLE
+            ATAQUE</button>
+          <button class="db-filter-kw" data-kw="PRISA" onclick="setKeywordFilter('PRISA')">⚡ PRISA</button>
+          <button class="db-filter-kw" data-kw="PROVOCAR" onclick="setKeywordFilter('PROVOCAR')">🛡️ PROVOCAR</button>
+          <button class="db-filter-kw" data-kw="VUELO" onclick="setKeywordFilter('VUELO')">🦅 VUELO</button>
+          <button class="db-filter-kw" data-kw="VENENO" onclick="setKeywordFilter('VENENO')">☠️ VENENO</button>
+          <button class="db-filter-kw" data-kw="GRITO" onclick="setKeywordFilter('GRITO')">🍏 GRITO</button>
+        </div>
+
+        <div class="db-filter-group">
+          <span>Tipo:</span>
+          <select id="db-select-type" class="db-select-filter" onchange="setTypeFilter(this.value)">
+            <option value="ALL">TODOS</option>
+            <option value="Leon">🦁 León</option>
+            <option value="Buho">🦉 Búho</option>
+            <option value="Buitre">🦅 Buitre</option>
+            <option value="Toro">🤠 Toro</option>
+            <option value="Tortuga">🐢 Tortuga</option>
+            <option value="Halcon">🦅 Halcón</option>
+            <option value="Mapache">🦝 Mapache</option>
+            <option value="Pulpo">🐙 Pulpo</option>
+            <option value="Tiburon">🦈 Tiburón</option>
+            <option value="Dinosaurio">🦖 Dinosaurio</option>
+            <option value="Insecto">🐝 Insecto</option>
+            <option value="Jabali">🐗 Jabalí</option>
+            <option value="Dragon">🐉 Dragón</option>
+          </select>
+        </div>
+
+        <div class="db-filter-group">
+          <span>Subtipo:</span>
+          <select id="db-select-subtype" class="db-select-filter" onchange="setSubtypeFilter(this.value)">
+            <option value="ALL">TODOS</option>
+            <option value="Guerrero">Guerrero</option>
+            <option value="Tirador">Tirador</option>
+            <option value="Chaman">Chamán</option>
+            <option value="Luchador">Luchador</option>
+            <option value="Bandido">Bandido</option>
+            <option value="Normal">Normal</option>
+          </select>
+        </div>
+
+        <div class="db-filter-group">
+          <span>Ordenar:</span>
+          <select id="db-select-sort" class="db-select-filter" onchange="setSortBy(this.value)">
+            <option value="cost_asc">Coste (Menor a Mayor)</option>
+            <option value="cost_desc">Coste (Mayor a Menor)</option>
+            <option value="name_asc">Nombre (A - Z)</option>
+            <option value="type_asc">Tipo / Facción</option>
+            <option value="subtype_asc">Subtipo</option>
+            <option value="attack_desc">Ataque (Mayor a Menor)</option>
+            <option value="hp_desc">Vida (Mayor a Menor)</option>
+          </select>
+        </div>
+
+        <input type="text" class="db-search-input" placeholder="Buscar por nombre..."
+          oninput="setSearchQuery(this.value)">
+      </div>
+
+      <!-- CUERPO PRINCIPAL DEL CREADOR (CATÁLOGO Y MAZO) -->
+      <div class="db-body">
+        <!-- CATÁLOGO DE CARTAS (70%) -->
+        <div class="db-catalog-section">
+          <div class="db-section-title">COLECCIÓN DISPONIBLE (Haz clic para añadir)</div>
+          <div class="db-catalog-grid" id="db-catalog-grid"></div>
+        </div>
+
+        <!-- LISTA DEL MAZO (30%) -->
+        <div class="db-deck-section">
+          <div class="db-section-title">TU SELECCIÓN ACTUAL (Haz clic en ✖ para quitar)</div>
+          <div class="db-deck-list" id="db-deck-list"></div>
+
+          <div class="db-actions">
+            <button class="btn-db-save" onclick="saveCustomDeck()">💾 GUARDAR TODO</button>
+            <button class="btn-db-reset" onclick="resetCustomDeckToDefault()">🔄 RESTABLECER</button>
+            <button class="btn-db-close" onclick="closeDeckBuilder()">✖ CERRAR</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL FIN DE JUEGO -->
+  <div class="modal-overlay" id="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-title" id="modal-title">¡VICTORIA!</div>
+      <div class="modal-text" id="modal-text">Has destruido la colmena enemiga.</div>
+      <button class="btn-restart" onclick="restartGame()">JUGAR DE NUEVO</button>
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src="effects.js"></script>
+  <script src="cards.js"></script>
+  <script src="deckbuilder.js"></script>
+  <script src="multiplayer.js"></script>
+  <script src="story.js"></script>
+  <script src="game.js"></script>
+  <script>
+    function switchSidebarTab(tab) {
+      document.getElementById('tab-log').classList.toggle('active', tab === 'log');
+      document.getElementById('tab-glossary').classList.toggle('active', tab === 'glossary');
+      document.getElementById('panel-log').classList.toggle('active', tab === 'log');
+      document.getElementById('panel-glossary').classList.toggle('active', tab === 'glossary');
+    }
+
+    function startSinglePlayer() {
+      gameMode = 'VS_AI';
+      document.getElementById('lobby-overlay').style.display = 'none';
+      initGame();
+    }
+  </script>
+
+  <!-- MODAL DE SELECCIÓN DE CAPÍTULOS DEL MODO HISTORIA -->
+  <div id="story-select-modal" class="modal-overlay" style="display: none; z-index: 280;">
+    <div class="modal-content" style="max-width: 550px; border-color: var(--accent-gold);">
+      <h2 style="color: var(--accent-gold); text-align: center; margin-bottom: 15px;">📜 SELECCIONAR CAPÍTULO</h2>
+      <div id="story-chapter-list"
+        style="display: flex; flex-direction: column; gap: 12px; max-height: 400px; overflow-y: auto;">
+        <!-- Insertado dinámicamente -->
+      </div>
+      <div style="text-align: center; margin-top: 20px;">
+        <button class="btn-lobby-mode" style="background: rgba(231, 76, 60, 0.2); border-color: var(--accent-red);"
+          onclick="closeStoryChapterSelect()">
+          ✖ VOLVER AL MENÚ
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- MODAL MANUAL DE JUEGO (DENTRO DE FERAL WARS) -->
+  <div id="game-manual-modal" class="modal-overlay" style="display: none; z-index: 310;">
+    <div class="modal-content"
+      style="max-width: 750px; max-height: 85vh; overflow-y: auto; border-color: #3498db; text-align: left;">
+      <h2 style="color: var(--accent-gold); text-align: center; margin-bottom: 5px;">⚔️ MANUAL OFICIAL: FERAL WARS 📜
+      </h2>
+      <p style="text-align: center; color: #bdc3c7; font-size: 0.9rem; margin-bottom: 15px;">Guía de Reglas, Palabras
+        Clave y Estrategias</p>
+
+      <div
+        style="background: rgba(0,0,0,0.4); padding: 15px; border-radius: 8px; border-left: 4px solid var(--accent-gold); margin-bottom: 15px;">
+        <h3 style="color: var(--accent-gold); margin-top: 0;">🏆 1. Objetivo del Duelo</h3>
+        <p>Reducir la salud del <strong>Reino Enemigo</strong> de <strong>30 a 0 HP</strong> antes de que destruyan el
+          tuyo.</p>
+      </div>
+
+      <div
+        style="background: rgba(0,0,0,0.4); padding: 15px; border-radius: 8px; border-left: 4px solid #3498db; margin-bottom: 15px;">
+        <h3 style="color: #3498db; margin-top: 0;">⚡ 2. Energía (Recurso)</h3>
+        <p>Comienzas el Turno 1 con <strong>1 de Energía</strong>. Cada nuevo turno tu Energía Máxima aumenta en
+          <strong>+1 (hasta 10)</strong> y se reestablece al 100%.
+        </p>
+      </div>
+
+      <div
+        style="background: rgba(0,0,0,0.4); padding: 15px; border-radius: 8px; border-left: 4px solid #2ecc71; margin-bottom: 15px;">
+        <h3 style="color: #2ecc71; margin-top: 0;">🎴 3. Tipos de Cartas</h3>
+        <ul>
+          <li><strong>Criaturas</strong>: Tienen coste de Energía, Ataque (ATK) y Salud (HP).</li>
+          <li><strong>Comandantes Leyenda 👑</strong>: Viven en tu Deck Extra y se invocan pagando su coste en Energía.
+          </li>
+          <li><strong>Hechizos ✨</strong>: Efectos inmediatos (curación, daño o buff de vida máxima).</li>
+          <li><strong>Trampas Ocultas 🪤</strong>: Se activan automáticamente ante acciones del enemigo.</li>
+        </ul>
+      </div>
+
+      <div
+        style="background: rgba(0,0,0,0.4); padding: 15px; border-radius: 8px; border-left: 4px solid #e74c3c; margin-bottom: 15px;">
+        <h3 style="color: #e74c3c; margin-top: 0;">🌟 4. Habilidades y Keywords</h3>
+        <p><strong>⚡ PRISA</strong>: Ataca en el mismo turno de invocación.</p>
+        <p><strong>🛡️ PROVOCAR</strong>: Obliga al rival a atacar a esta criatura primero.</p>
+        <p><strong>🦅 VUELO</strong>: Ignora Provocar y ataca directo al Reino.</p>
+        <p><strong>☠️ VENENO</strong>: Destruye instantáneamente a cualquier criatura al infligir daño.</p>
+        <p><strong>🛡️✨ ESCUDO</strong>: Absorbe el primer impacto de daño sin perder HP.</p>
+        <p><strong>⚔️⚔️ DOBLE ATAQUE</strong>: Realiza 2 ataques en el mismo turno.</p>
+        <p><strong>🍏 GRITO DE GUERRA</strong>: Efecto inmediato al ser invocada.</p>
+      </div>
+
+      <div style="text-align: center; margin-top: 20px; display: flex; justify-content: center; gap: 10px;">
+        <a href="MANUAL_DE_JUEGO.html" target="_blank" class="btn-lobby-mode"
+          style="padding: 8px 16px; font-size: 0.9rem; border-color: #3498db; color: #3498db; text-decoration: none;">
+          🔗 Abrir Manual Web en Nueva Pestaña
+        </a>
+        <button class="btn-lobby-mode" style="padding: 8px 16px; font-size: 0.9rem; border-color: var(--accent-red);"
+          onclick="closeGameManualModal()">
+          ✖ CERRAR
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openGameManualModal() {
+      document.getElementById('game-manual-modal').style.display = 'flex';
+    }
+    function closeGameManualModal() {
+      document.getElementById('game-manual-modal').style.display = 'none';
+    }
+  </script>
+
+  <div id="global-card-tooltip"></div>
+
+  <!-- MODAL SELECTOR DE AVATAR DE REINO -->
+  <div class="modal-overlay" id="avatar-select-modal" style="display: none;">
+    <div class="modal-content" style="max-width: 420px; text-align: center;">
+      <div class="modal-title" style="color: var(--accent-gold);">👤 ELIGE TU AVATAR DE REINO</div>
+      <div class="modal-text">Selecciona la insignia que te representará en la batalla</div>
+
+      <div class="avatar-grid">
+        <div class="avatar-option" onclick="selectPlayerAvatar('🦁')">🦁</div>
+        <div class="avatar-option" onclick="selectPlayerAvatar('🐢')">🐢</div>
+        <div class="avatar-option" onclick="selectPlayerAvatar('🦝')">🦝</div>
+        <div class="avatar-option" onclick="selectPlayerAvatar('🦉')">🦉</div>
+        <div class="avatar-option" onclick="selectPlayerAvatar('🐗')">🐗</div>
+        <div class="avatar-option" onclick="selectPlayerAvatar('🦈')">🦈</div>
+        <div class="avatar-option" onclick="selectPlayerAvatar('🐝')">🐝</div>
+        <div class="avatar-option" onclick="selectPlayerAvatar('🐉')">🐉</div>
+      </div>
+
+      <button class="btn-lobby-mode" style="margin-top: 20px;" onclick="closeAvatarSelectModal()">
+        ✅ GUARDAR AVATAR
+      </button>
+    </div>
+  </div>
+
+</body>
+
+</html>

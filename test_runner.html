@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>QA Test Runner - Insectos en Guerra</title>
+  <style>
+    body { font-family: monospace; background: #0e141b; color: #ecf0f1; padding: 30px; }
+    h1 { color: #f39c12; border-bottom: 2px solid #333; padding-bottom: 10px; }
+    .card { background: #18222d; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+    .pass { color: #2ecc71; font-weight: bold; }
+    .fail { color: #e74c3c; font-weight: bold; }
+    .stat-box { display: flex; gap: 20px; font-size: 16px; margin: 15px 0; }
+    .stat { background: rgba(255,255,255,0.05); padding: 10px 15px; border-radius: 6px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { padding: 10px; text-align: left; border-bottom: 1px solid #2c3e50; }
+    th { background: #16202c; color: #3498db; }
+  </style>
+</head>
+<body>
+  <h1>🧪 INSECTOS EN GUERRA - REPORTES DE PRUEBAS DE SOFTWARE (QA)</h1>
+  <div class="card">
+    <h2>Resumen de Ejecución</h2>
+    <div class="stat-box" id="stats-container">Cargando resultados...</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Prueba / Verificación</th>
+          <th>Estado</th>
+          <th>Detalles</th>
+        </tr>
+      </thead>
+      <tbody id="test-table"></tbody>
+    </table>
+  </div>
+
+  <script src="cards.js"></script>
+  <script src="game.js"></script>
+  <script src="test_suite.js"></script>
+  <script>
+    window.onload = () => {
+      const report = runAllTests();
+      
+      const statsEl = document.getElementById('stats-container');
+      statsEl.innerHTML = `
+        <div class="stat">Pruebas Totales: <b>${report.results.length}</b></div>
+        <div class="stat">Pasadas: <b class="pass">${report.passedCount}</b></div>
+        <div class="stat">Falladas: <b class="fail">${report.failedCount}</b></div>
+        <div class="stat">Partidas Simuladas: <b>50</b></div>
+        <div class="stat">Promedio Turnos/Partida: <b>${report.stats.avgTurns}</b></div>
+      `;
+
+      const tableEl = document.getElementById('test-table');
+      tableEl.innerHTML = report.results.map(r => `
+        <tr>
+          <td>${r.name}</td>
+          <td class="${r.status.toLowerCase()}">${r.status === 'PASS' ? '✅ PASS' : '❌ FAIL'}</td>
+          <td>${r.details || '-'}</td>
+        </tr>
+      `).join('');
+    };
+  </script>
+</body>
+</html>

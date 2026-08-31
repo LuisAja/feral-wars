@@ -1,0 +1,7 @@
+🏷️ Versión Oficial Actual: 
+Feral_Wars_1.3.1.zip
+🎴 Bitácora Interactiva: Nombres de cartas en corchetes dorados con vista previa flotante de imagen y stats al pasar el ratón.
+🔒 Confidencialidad de Mano: Los robos del oponente son 100% secretos (🃏 Oponente robó 1 carta.).
+🤝 Multijugador P2P Robusto: Salud por Autoridad sin desincronización, recreación limpia de salas y soporte de Instintos online.
+👤 Personalización: Selector de Avatares de Reino guardado en local.
+Cualquier nueva idea o función que quieras sumar en el futuro, estaré listo para ayudarte. ¡A disfrutar del juego! 🦁🐢🦝🦉⚔️
