@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>QA Test Runner - Insectos en Guerra</title>
+  <title>QA Test Runner - Feral Wars</title>
   <style>
     body { font-family: monospace; background: #0e141b; color: #ecf0f1; padding: 30px; }
     h1 { color: #f39c12; border-bottom: 2px solid #333; padding-bottom: 10px; }
@@ -17,7 +17,7 @@
   </style>
 </head>
 <body>
-  <h1>🧪 INSECTOS EN GUERRA - REPORTES DE PRUEBAS DE SOFTWARE (QA)</h1>
+  <h1>🧪 FERAL WARS - REPORTES DE PRUEBAS DE SOFTWARE (QA)</h1>
   <div class="card">
     <h2>Resumen de Ejecución</h2>
     <div class="stat-box" id="stats-container">Cargando resultados...</div>
@@ -33,14 +33,43 @@
     </table>
   </div>
 
+  <!-- Almacenamiento en memoria ANTES del juego: el reporte no toca el mazo ni la colección guardados,
+       y los resultados no dependen de lo que cada máquina tenga en localStorage. -->
+  <script>
+    (function () {
+      const store = new Map();
+      const memoryStorage = {
+        get length() { return store.size; },
+        key(i) { const keys = Array.from(store.keys()); return i >= 0 && i < keys.length ? keys[i] : null; },
+        getItem(k) { return store.has(String(k)) ? store.get(String(k)) : null; },
+        setItem(k, v) { store.set(String(k), String(v)); },
+        removeItem(k) { store.delete(String(k)); },
+        clear() { store.clear(); }
+      };
+      Object.defineProperty(window, 'localStorage', { value: memoryStorage, configurable: true, writable: true });
+    })();
+  </script>
+
+  <!-- Mismo orden de carga que index.html: los tests corren contra el juego completo -->
+  <script src="effects.js"></script>
   <script src="cards.js"></script>
+  <script src="deckbuilder.js"></script>
+  <script src="multiplayer.js"></script>
+  <script src="story.js"></script>
   <script src="game.js"></script>
   <script src="test_suite.js"></script>
   <script>
-    window.onload = () => {
-      const report = runAllTests();
-      
+    window.onload = async () => {
       const statsEl = document.getElementById('stats-container');
+
+      let report;
+      try {
+        report = await runAllTests();
+      } catch (e) {
+        statsEl.innerHTML = `<div class="stat fail">La suite no pudo terminar: ${e && e.message ? e.message : e}</div>`;
+        throw e;
+      }
+
       statsEl.innerHTML = `
         <div class="stat">Pruebas Totales: <b>${report.results.length}</b></div>
         <div class="stat">Pasadas: <b class="pass">${report.passedCount}</b></div>

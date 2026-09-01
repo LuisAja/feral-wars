@@ -32,19 +32,106 @@ function fallbackCopyText(text) {
 let peer = null;
 let p2pConnection = null;
 let myRoomCode = '';
+let p2pMatchStarted = false;
+let p2pHostStartTimer = null;
 
 if (typeof window.gameMode === 'undefined') {
   window.gameMode = 'VS_AI'; // 'VS_AI' | 'ONLINE_HOST' | 'ONLINE_GUEST'
 }
 
-function initPeerNetwork() {
-  if (peer) return;
+// Una partida (online o no) está en curso cuando el lobby ya no está a la vista
+function isDuelInProgress() {
+  const lobby = document.getElementById('lobby-overlay');
+  if (!lobby || lobby.style.display !== 'none') return false;
+  return !(typeof gameState === 'undefined' || !gameState || gameState.isGameOver);
+}
+
+function isOnlineMatchInProgress() {
+  if (window.gameMode !== 'ONLINE_HOST' && window.gameMode !== 'ONLINE_GUEST') return false;
+  if (!p2pMatchStarted) return false;
+  return !(typeof gameState === 'undefined' || !gameState || gameState.isGameOver);
+}
+
+function abortP2pMatch(reason) {
+  if (typeof addLog === 'function') addLog(reason, "system");
+  if (typeof showBanner === 'function') showBanner(reason);
+
+  p2pMatchStarted = false;
+  window.gameMode = 'VS_AI';
+  if (typeof gameState !== 'undefined' && gameState) gameState.isGameOver = true;
+
+  if (p2pConnection) {
+    try { p2pConnection.close(); } catch (e) {}
+    p2pConnection = null;
+  }
+
+  const lobby = document.getElementById('lobby-overlay');
+  if (lobby) lobby.style.display = 'flex';
+}
+
+// Corta el enlace y suelta el código de sala; la llama restartGame() al salir del duelo al lobby (el cierre se difiere para que salga el último paquete)
+function closeP2pConnection() {
+  p2pMatchStarted = false;
+  if (p2pHostStartTimer) {
+    clearTimeout(p2pHostStartTimer);
+    p2pHostStartTimer = null;
+  }
+
+  const conn = p2pConnection;
+  const oldPeer = peer;
+  p2pConnection = null;
+  peer = null;
+  myRoomCode = '';
+  remoteGuestCustomMain = null;
+  remoteGuestCustomExtra = null;
+
+  if (window.gameMode === 'ONLINE_HOST' || window.gameMode === 'ONLINE_GUEST') {
+    window.gameMode = 'VS_AI';
+  }
+
+  setTimeout(() => {
+    if (conn) {
+      try { conn.close(); } catch (e) {}
+    }
+    if (oldPeer) {
+      try { oldPeer.destroy(); } catch (e) {}
+    }
+  }, 300);
+}
+
+function beginP2pMatchAsHost() {
+  if (p2pMatchStarted) return;
+
+  if (p2pHostStartTimer) {
+    clearTimeout(p2pHostStartTimer);
+    p2pHostStartTimer = null;
+  }
+
+  p2pMatchStarted = true;
+  try {
+    startP2pMatchAsHost();
+  } catch (e) {
+    console.error("No se pudo iniciar la partida online como Anfitrión:", e);
+    abortP2pMatch("❌ No se pudo iniciar la partida online. Volvé al menú e intentá de nuevo.");
+  }
+}
+
+// El Invitado no publica sala: deja que el broker le asigne un id en vez de ocupar un código adivinable
+function initPeerNetwork(asGuest) {
+  if (peer) return true;
+
+  if (typeof Peer === 'undefined') {
+    addLog("❌ La red P2P todavía no terminó de cargar. Esperá unos segundos y volvé a intentarlo.", "system");
+    if (typeof showBanner === 'function') showBanner("❌ LA RED P2P TODAVÍA NO CARGÓ");
+    return false;
+  }
 
   const randomCode = Math.floor(1000 + Math.random() * 9000);
-  myRoomCode = `INSECTO-${randomCode}`;
+  const requestedCode = `INSECTO-${randomCode}`;
+  myRoomCode = '';
 
   try {
-    peer = new Peer(myRoomCode, { debug: 1 });
+    peer = asGuest ? new Peer({ debug: 1 }) : new Peer(requestedCode, { debug: 1 });
 
     peer.on('open', (id) => {
       myRoomCode = id;
@@ -53,6 +140,20 @@ function initPeerNetwork() {
     });
 
     peer.on('connection', (conn) => {
+      if (p2pConnection || isDuelInProgress()) {
+        addLog("🚫 Se rechazó una conexión entrante: la sala ya está ocupada.", "system");
+        const rejectConn = () => {
+          try {
+            conn.send({ type: 'ROOM_BUSY' });
+          } catch (e) {}
+          setTimeout(() => {
+            try { conn.close(); } catch (e) {}
+          }, 300);
+        };
+        if (conn.open) rejectConn(); else conn.on('open', rejectConn);
+        return;
+      }
+
       p2pConnection = conn;
       window.gameMode = 'ONLINE_HOST';
       setupConnectionListeners();
@@ -60,9 +161,16 @@ function initPeerNetwork() {
       addLog("🤝 ¡Amigo conectado a la sala! Iniciando partida...", "system");
       showBanner("🤝 ¡AMIGO CONECTADO!");
 
-      setTimeout(() => {
-        startP2pMatchAsHost();
-      }, 600);
+      // El arranque real lo dispara el GUEST_JOIN; esto es solo la red de seguridad
+      if (p2pHostStartTimer) clearTimeout(p2pHostStartTimer);
+      p2pHostStartTimer = setTimeout(() => {
+        p2pHostStartTimer = null;
+        if (!p2pConnection || !p2pConnection.open) {
+          abortP2pMatch("🔌 Tu amigo se desconectó antes de que empezara el duelo. Volvé a crear la sala.");
+          return;
+        }
+        beginP2pMatchAsHost();
+      }, 5000);
     });
 
     peer.on('error', (err) => {
@@ -70,8 +178,13 @@ function initPeerNetwork() {
       addLog("❌ Error de red P2P: " + err.type, "system");
     });
   } catch (e) {
-    console.error("No se pudo cargar PeerJS:", e);
+    console.error("No se pudo iniciar PeerJS:", e);
+    peer = null;
+    addLog("❌ No se pudo iniciar la red P2P. Recargá la página e intentá de nuevo.", "system");
+    return false;
   }
+
+  return true;
 }
 
 function createP2pRoom() {
@@ -85,8 +198,13 @@ function createP2pRoom() {
   remoteGuestCustomMain = null;
   remoteGuestCustomExtra = null;
   myRoomCode = '';
+  p2pMatchStarted = false;
+  if (p2pHostStartTimer) {
+    clearTimeout(p2pHostStartTimer);
+    p2pHostStartTimer = null;
+  }
 
-  initPeerNetwork();
+  if (!initPeerNetwork(false)) return;
   document.getElementById('lobby-status').innerHTML = `
     <div style="color: var(--accent-gold); font-size: 16px; margin-bottom: 10px;">Código de Sala Creado (Haz clic para copiar):</div>
     <div id="room-code-badge" onclick="copyRoomCodeToClipboard()" style="font-size: 26px; font-weight: 900; background: rgba(0,0,0,0.6); padding: 12px; border-radius: 8px; border: 2px dashed var(--accent-gold); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;" title="Haz clic para copiar el código">
@@ -98,7 +216,6 @@ function createP2pRoom() {
 }
 
 function joinP2pRoom() {
-  initPeerNetwork();
   const inputCode = document.getElementById('join-code-input').value.trim().toUpperCase();
 
   if (!inputCode) {
@@ -106,8 +223,24 @@ function joinP2pRoom() {
     return;
   }
 
+  if (!initPeerNetwork(true)) return;
+
+  p2pMatchStarted = false;
   addLog(`Conectando a la sala ${inputCode}...`, "system");
-  p2pConnection = peer.connect(inputCode);
+
+  try {
+    p2pConnection = peer.connect(inputCode);
+  } catch (e) {
+    console.error("No se pudo abrir la conexión con la sala:", e);
+    p2pConnection = null;
+  }
+
+  if (!p2pConnection) {
+    addLog("❌ No se pudo conectar a la sala. Revisá el código e intentá de nuevo.", "system");
+    if (typeof showBanner === 'function') showBanner("❌ NO SE PUDO CONECTAR A LA SALA");
+    return;
+  }
+
   window.gameMode = 'ONLINE_GUEST';
 
   setupConnectionListeners();
@@ -115,6 +248,7 @@ function joinP2pRoom() {
 
 function setupConnectionListeners() {
   if (!p2pConnection) return;
+  const conn = p2pConnection;
 
   p2pConnection.on('open', () => {
     addLog("🌐 Conexión P2P establecida exitosamente.", "system");
@@ -134,9 +268,35 @@ function setupConnectionListeners() {
   });
 
   p2pConnection.on('close', () => {
-    addLog("⚠️ Tu amigo se ha desconectado de la sala.", "system");
-    alert("Tu amigo se ha desconectado de la sala.");
-    location.reload();
+    const isCurrent = p2pConnection === conn;
+
+    if (isCurrent && p2pHostStartTimer) {
+      clearTimeout(p2pHostStartTimer);
+      p2pHostStartTimer = null;
+    }
+
+    if (isCurrent && isOnlineMatchInProgress()) {
+      addLog("⚠️ Tu amigo se ha desconectado de la sala.", "system");
+      alert("Tu amigo se ha desconectado de la sala.");
+      location.reload();
+      return;
+    }
+
+    // El lobby ya está oculto desde que la conexión abrió: si se corta antes del reparto hay que reponerlo
+    const wasOnline = window.gameMode === 'ONLINE_HOST' || window.gameMode === 'ONLINE_GUEST';
+    const beforeMatch = isCurrent && wasOnline && !p2pMatchStarted;
+
+    if (isCurrent) {
+      p2pConnection = null;
+      p2pMatchStarted = false;
+    }
+
+    if (beforeMatch) {
+      abortP2pMatch("🔌 Se cortó la conexión antes de empezar el duelo. Volvé a crear una sala o a unirte a otra.");
+      return;
+    }
+
+    addLog("🔌 Conexión P2P cerrada.", "system");
   });
 }
 
@@ -168,16 +328,21 @@ let remoteGuestCustomMain = null;
 let remoteGuestCustomExtra = null;
 
 function startP2pMatchAsHost() {
+  if (typeof window.startNewGameGeneration === 'function') window.startNewGameGeneration();
+  if (typeof window.resetEffectSummonQueue === 'function') window.resetEffectSummonQueue();
+
   let instCounter = 1;
 
-  const customHostDeck = typeof getActiveDeckCards === 'function' ? getActiveDeckCards() : CARD_DATABASE;
+  const defaultMainDeck = CARD_DATABASE.filter(c => !c.isExtra && !c.hidden);
+  const customHostDeck = typeof getActiveDeckCards === 'function' ? getActiveDeckCards() : defaultMainDeck;
   const customHostExtra = typeof getActiveExtraDeckCards === 'function' ? getActiveExtraDeckCards() : CARD_DATABASE.filter(c => c.isExtra && !c.hidden);
 
-  const rawHostDeck = shuffle([...customHostDeck]);
-  const rawGuestDeck = shuffle([...(remoteGuestCustomMain && remoteGuestCustomMain.length >= 15 ? remoteGuestCustomMain : CARD_DATABASE)]);
+  const rawHostDeck = shuffleDeck([...customHostDeck]);
+  const rawGuestDeck = shuffleDeck([...(remoteGuestCustomMain && remoteGuestCustomMain.length >= 15 ? remoteGuestCustomMain : defaultMainDeck)]);
 
-  const hostDeck = rawHostDeck.map(c => ({ instanceId: 'h_inst_' + (instCounter++), ...c }));
-  const guestDeck = rawGuestDeck.map(c => ({ instanceId: 'g_inst_' + (instCounter++), ...c }));
+  // shuffleDeck le pone un instanceId genérico a cada carta; acá se reemplaza por uno con el prefijo del lado que la juega
+  const hostDeck = rawHostDeck.map(c => ({ ...c, instanceId: 'h_inst_' + (instCounter++) }));
+  const guestDeck = rawGuestDeck.map(c => ({ ...c, instanceId: 'g_inst_' + (instCounter++) }));
 
   const hostExtra = customHostExtra.map(c => ({ instanceId: 'h_extra_' + (instCounter++), ...c }));
   const customGuestExtraList = remoteGuestCustomExtra && remoteGuestCustomExtra.length >= 1 ? remoteGuestCustomExtra : CARD_DATABASE.filter(c => c.isExtra && !c.hidden);
@@ -235,6 +400,9 @@ function startP2pMatchAsHost() {
 }
 
 function startP2pMatchAsGuest(packet) {
+  if (typeof window.startNewGameGeneration === 'function') window.startNewGameGeneration();
+  if (typeof window.resetEffectSummonQueue === 'function') window.resetEffectSummonQueue();
+
   gameState.isGameOver = false;
   gameState.isAnimating = false;
   gameState.turn = 'ENEMY';
@@ -271,28 +439,44 @@ function startP2pMatchAsGuest(packet) {
 async function handleP2pPacket(packet) {
   console.log("Paquete P2P recibido:", packet);
 
-  enqueueAction('SYNC_STATE', packet);
+  if (!packet) return;
+  packet.isLocal = false;
+
+  // Paquetes de handshake: GUEST_JOIN e INIT_MATCH cargan el estado anterior al reparto y ROOM_BUSY no carga ninguno
+  if (packet.type !== 'GUEST_JOIN' && packet.type !== 'INIT_MATCH' && packet.type !== 'ROOM_BUSY') {
+    enqueueAction('SYNC_STATE', packet);
+  }
 
   if (packet.type === 'GUEST_JOIN') {
     if (packet.guestMain) remoteGuestCustomMain = packet.guestMain;
     if (packet.guestExtra) remoteGuestCustomExtra = packet.guestExtra;
+    if (window.gameMode === 'ONLINE_HOST') beginP2pMatchAsHost();
+  } else if (packet.type === 'ROOM_BUSY') {
+    abortP2pMatch("🚫 Esa sala ya está ocupada: tu amigo ya tiene un rival o una partida en curso.");
   } else if (packet.type === 'INIT_MATCH') {
-    startP2pMatchAsGuest(packet);
+    if (p2pMatchStarted) return;
+    p2pMatchStarted = true;
+    try {
+      startP2pMatchAsGuest(packet);
+    } catch (e) {
+      console.error("No se pudo iniciar la partida online como Invitado:", e);
+      abortP2pMatch("❌ No se pudo iniciar la partida online. Volvé al menú e intentá de nuevo.");
+    }
   } else if (packet.type === 'PLAY_CARD') {
-    enqueueAction('PLAY_CARD', { who: 'enemy', cardObj: packet.card, battlecryTargetInstId: packet.battlecryTargetInstId });
+    enqueueAction('PLAY_CARD', { who: 'enemy', cardObj: packet.card, battlecryTargetInstId: packet.battlecryTargetInstId, isLocal: false });
   } else if (packet.type === 'PLAY_EXTRA_CARD') {
-    enqueueAction('PLAY_EXTRA_CARD', { who: 'enemy', cardObj: packet.card, battlecryTargetInstId: packet.battlecryTargetInstId });
+    enqueueAction('PLAY_EXTRA_CARD', { who: 'enemy', cardObj: packet.card, battlecryTargetInstId: packet.battlecryTargetInstId, isLocal: false });
   } else if (packet.type === 'ATTACK') {
-    enqueueAction('ATTACK', { who: 'enemy', targetType: packet.targetType, attackerInstId: packet.attackerInstId, targetInstId: packet.targetInstId });
+    enqueueAction('ATTACK', { who: 'enemy', targetType: packet.targetType, attackerInstId: packet.attackerInstId, targetInstId: packet.targetInstId, isLocal: false });
   } else if (packet.type === 'END_TURN') {
-    addLog("--- Tu amigo finalizó su turno ---", "system");
     showBanner("✨ ¡ES TU TURNO!");
-    startTurn('player');
+    enqueueAction('END_TURN', { who: 'enemy', isLocal: false });
   } else if (packet.type === 'INSTINCT_TRIGGER') {
     if (typeof triggerRemoteInstinctP2p === 'function') {
       triggerRemoteInstinctP2p(packet);
     }
   } else if (packet.type === 'SURRENDER') {
+    if (!isOnlineMatchInProgress()) return;
     gameState.isGameOver = true;
     showBanner("🏆 ¡TU RIVAL ABANDONÓ EL DUELO!");
     addLog("🏆 ¡Tu oponente se ha rendido! Has ganado el Duelo.", "player");

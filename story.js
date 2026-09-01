@@ -6,8 +6,9 @@ const STORY_CHAPTERS = [
     title: "Capítulo 1: El Orgullo del León",
     bossName: "Gran Campeón Leonino",
     bossAvatar: "🦁",
+    // bossHp: el motor todavía no lo lee; el jefe arranca con la vida por defecto.
     bossHp: 30,
-    bossFaction: "Leon",
+    bossFaction: "León",
     rewardCardIds: ["s1_04", "s1_05", "s1_06"], // Recompensas por vencer al León
     bossMainDeckIds: [
       "s1_02", "s1_02", "s1_02",
@@ -43,7 +44,7 @@ const STORY_CHAPTERS = [
     bossAvatar: "🦝",
     bossHp: 35,
     bossFaction: "Mapache",
-    rewardCardIds: ["s1_27", "s1_28", "s1_29"], // Recompensas por vencer al Mapache
+    rewardCardIds: ["s1_44", "s1_48", "s1_46"], // Recompensas por vencer al Mapache
     bossMainDeckIds: [
       "s1_25", "s1_25", "s1_25",
       "s1_26", "s1_26", "s1_26",
@@ -77,8 +78,8 @@ const STORY_CHAPTERS = [
     bossName: "Lider Tribal",
     bossAvatar: "🐗",
     bossHp: 35,
-    bossFaction: "Búho",
-    rewardCardIds: ["s1_98", "s1_97", "s1_95"], // Recompensas por vencer al Búho
+    bossFaction: "Jabalí",
+    rewardCardIds: ["s1_98", "s1_97", "s1_95"], // Recompensas por vencer al Jabalí
     bossMainDeckIds: [
       "s1_90", "s1_90", "s1_90",
       "s1_91", "s1_91", "s1_92",

@@ -28,6 +28,7 @@ const CARD_DATABASE = [
     "cost": 1,
     "attack": 2,
     "hp": 1,
+    "keywords": [],
     "battlecry": {
       "type": "DAMAGE_TARGET",
       "val": 1
@@ -45,6 +46,7 @@ const CARD_DATABASE = [
     "cost": 1,
     "attack": 1,
     "hp": 2,
+    "keywords": [],
     "battlecry": {
       "type": "SEARCH_DECK",
       "val": "León"
@@ -62,6 +64,7 @@ const CARD_DATABASE = [
     "cost": 3,
     "attack": 3,
     "hp": 3,
+    "keywords": [],
     "battlecry": {
       "type": "SUMMON_RANDOM_FROM_HAND",
       "val": 1,
@@ -252,6 +255,7 @@ const CARD_DATABASE = [
     "cost": 4,
     "attack": 3,
     "hp": 4,
+    "keywords": [],
     "battlecry": [
       {
         "type": "REVIVE_RANDOM_CREATURE",
@@ -291,6 +295,7 @@ const CARD_DATABASE = [
     "cost": 2,
     "attack": 2,
     "hp": 4,
+    "keywords": [],
     "battlecry": {
       "type": "HEAL_ALL_FRIENDLIES",
       "val": 2
@@ -521,7 +526,7 @@ const CARD_DATABASE = [
     "keywords": [],
     "battlecry": {
       "type": "SUMMON_RANDOM_FROM_HAND",
-      "maxCost": "4"
+      "maxCost": 4
     },
     "description": "GRITO DE GUERRA: Otorga +1 de Ataque a todas tus criaturas aliadas.",
     "isExtra": false,
@@ -605,9 +610,10 @@ const CARD_DATABASE = [
     "cost": 1,
     "attack": 1,
     "hp": 4,
+    "keywords": [],
     "battlecry": {
       "type": "SUMMON_RANDOM_FROM_HAND",
-      "maxCost": "3"
+      "maxCost": 3
     },
     "description": "PROVOCAR (Los enemigos deben atacar a esta criatura primero).",
     "isExtra": false,
@@ -1127,6 +1133,7 @@ const CARD_DATABASE = [
     "cost": 6,
     "attack": 10,
     "hp": 10,
+    "keywords": [],
     "description": "",
     "isStarter": false
   },
@@ -1139,6 +1146,7 @@ const CARD_DATABASE = [
     "cost": 4,
     "attack": 6,
     "hp": 7,
+    "keywords": [],
     "battlecry": {
       "type": "BUFF_ALL_FRIENDLIES_ATK",
       "val": 3
@@ -1172,6 +1180,7 @@ const CARD_DATABASE = [
     "cost": 3,
     "attack": 2,
     "hp": 4,
+    "keywords": [],
     "battlecry": {
       "type": "SUMMON_RANDOM_FROM_HAND",
       "maxCost": 5
@@ -1836,6 +1845,7 @@ const CARD_DATABASE = [
     "cost": 4,
     "attack": 6,
     "hp": 4,
+    "keywords": [],
     "battlecry": {
       "type": "SUMMON_RANDOM_FROM_HAND",
       "maxCost": 4
@@ -2653,15 +2663,15 @@ function getCardDescription(card) {
       let prefix = card.isSpell ? "HECHIZO: " : "GRITO DE GUERRA: ";
       let btype = b.type;
       let val = b.val || 0;
-      if (btype === 'DAMAGE_TARGET') descParts.push(`${prefix}Inflige ${val} de daño al azar.`);
-      else if (btype === 'DESTROY_TARGET_CREATURE') descParts.push(`${prefix}Destruye instantáneamente a una criatura enemiga al azar.`);
+      if (btype === 'DAMAGE_TARGET') descParts.push(`${prefix}Inflige ${val} de daño a la primera criatura enemiga; si el rival no tiene criaturas, al Reino enemigo.`);
+      else if (btype === 'DESTROY_TARGET_CREATURE') descParts.push(`${prefix}Destruye instantáneamente a la primera criatura enemiga; si el rival no tiene criaturas, no hace nada.`);
       else if (btype === 'BUFF_ALL_FRIENDLIES_HP' || btype === 'BUFF_ALL_FRIENDLIES_MAX_HP') descParts.push(`${prefix}Aumenta la salud de todas tus criaturas aliadas en +${val} HP.`);
       else if (btype === 'BUFF_ALL_FRIENDLIES_ATK') descParts.push(`${prefix}Otorga +${val} de Ataque a todas tus criaturas aliadas.`);
       else if (btype === 'HEAL_HIVE') descParts.push(`${prefix}Restaura +${val} de salud a tu Reino.`);
       else if (btype === 'DAMAGE_SELF_HIVE') descParts.push(`${prefix}Inflige ${val} de daño a tu propio Reino.`);
       else if (btype === 'DAMAGE_ENEMY_HIVE') descParts.push(`${prefix}Inflige ${val} de daño directo al Reino enemigo.`);
       else if (btype === 'DAMAGE_ALL_ENEMIES') descParts.push(`${prefix}Inflige ${val} de daño a todas las criaturas enemigas.`);
-      else if (btype === 'SEARCH_DECK') descParts.push(`${prefix}Busca y roba ${val} carta(s) de tu mazo.`);
+      else if (btype === 'SEARCH_DECK') descParts.push(`${prefix}Busca en tu mazo la primera carta que coincida con "${val}" y la roba.`);
       else if (btype === 'HEAL_ALL_FRIENDLIES') descParts.push(`${prefix}Restaura +${val} de salud a todas tus criaturas aliadas.`);
       else if (btype === 'SUMMON_RANDOM_FROM_HAND') {
         let costTxt = (b.maxCost !== undefined && b.maxCost !== null) ? ` de costo ${b.maxCost} o menos` : "";

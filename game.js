@@ -89,6 +89,7 @@ async function checkHandInstinctTriggers(who, triggerType, contextObj = {}) {
         executeRegisteredEffect(bc.type, context, targetObj, bc.val);
       }
     }
+    await drainEffectSummonQueue(who);
   }
 
   if (!defender.graveyard) defender.graveyard = [];
@@ -140,6 +141,18 @@ const gameState = {
 
   enemy: { hp: 30, nectar: 1, maxNectar: 1, deck: [], hand: [], board: [], extraDeck: [], traps: [], graveyard: [] }
 
+};
+
+
+
+// Se incrementa en cada initGame(): identifica la partida en curso.
+
+var gameGeneration = 0;
+
+// Las partidas online se arman fuera de initGame(): multiplayer.js llama a esto para que los
+// turnos que quedaron en vuelo de la partida anterior se den por abortados.
+window.startNewGameGeneration = function () {
+  gameGeneration++;
 };
 
 
@@ -262,9 +275,13 @@ function initGame() {
 
   if (typeof autoSanitizeLocalStorage === 'function') autoSanitizeLocalStorage();
 
+  gameGeneration++;
+
   actionQueue.length = 0;
 
   isProcessingQueue = false;
+
+  window.effectSummonQueue = [];
 
 
 
@@ -277,6 +294,8 @@ function initGame() {
   gameState.isAnimating = false;
 
   gameState.selectedAttacker = null;
+
+  gameState.enemyHasStartedTurn = false;
 
 
 
@@ -447,6 +466,18 @@ function drawCard(who) {
   }
 }
 
+function deduplicateBoard(board) {
+  if (!Array.isArray(board)) return [];
+  const seen = new Set();
+  return board.filter(card => {
+    if (!card) return false;
+    if (card.instanceId === undefined || card.instanceId === null) return true;
+    if (seen.has(card.instanceId)) return false;
+    seen.add(card.instanceId);
+    return true;
+  });
+}
+
 
 
 function endTurn() {
@@ -588,7 +619,7 @@ async function playCard(handIndex) {
     return;
   }
 
-  enqueueAction('PLAY_CARD', { who: 'player', handIndex: handIndex, cardObj: card });
+  enqueueAction('PLAY_CARD', { who: 'player', handIndex: handIndex, cardObj: card, isLocal: true });
 }
 
 
@@ -631,9 +662,26 @@ function playExtraCard(extraIndex) {
 
 
 
-  enqueueAction('PLAY_EXTRA_CARD', { who: 'player', extraIndex: extraIndex, cardObj: card });
+  enqueueAction('PLAY_EXTRA_CARD', { who: 'player', extraIndex: extraIndex, cardObj: card, isLocal: true });
 
 }
+
+// La cola guarda instanceIds de la partida en curso: al empezar otra hay que vaciarla.
+window.resetEffectSummonQueue = function () {
+  window.effectSummonQueue = [];
+};
+
+// Criaturas que un efecto acaba de poner en el tablero: cada una dispara un INSTINTO de SUMMON en el rival.
+async function drainEffectSummonQueue(who) {
+  while (window.effectSummonQueue && window.effectSummonQueue.length > 0) {
+    const summonedInstId = window.effectSummonQueue.shift();
+    await checkHandInstinctTriggers(who === 'player' ? 'enemy' : 'player', 'SUMMON', { summonedInstId: summonedInstId });
+  }
+}
+
+// Estos efectos escriben desde effects.js su propio motivo de fracaso (mazo vacío, mano llena,
+// cementerio sin criaturas): volver a loguearlo acá duplicaría la línea.
+const SELF_EXPLAINED_FAILURES = ['SEARCH_DECK', 'REVIVE_RANDOM_CREATURE', 'SUMMON_RANDOM_FROM_HAND'];
 
 async function executeBattlecryAsync(who, battlecry) {
   if (!battlecry) return;
@@ -667,16 +715,29 @@ async function executeBattlecryAsync(who, battlecry) {
       isPlayer: isPlayer
     };
 
+    let effectApplied = true;
     if (typeof executeRegisteredEffect === 'function') {
-      executeRegisteredEffect(bc.type, context, targetObj, bc.val, bc);
+      effectApplied = executeRegisteredEffect(bc.type, context, targetObj, bc.val, bc) !== false;
     }
 
     const targetName = targetObj ? (targetObj.isHive ? "el Reino Enemigo" : `[${targetObj.card ? targetObj.card.name : 'Criatura'}]`) : "el objetivo";
 
-    if (bc.type === 'DAMAGE_TARGET') {
+    if (!effectApplied) {
+      // El efecto no llegó a aplicarse: no se anuncia como si hubiera pasado algo.
+      if (bc.type === 'DESTROY_TARGET_CREATURE') {
+        addLog(`💀 Grito/Hechizo: ${nameTag} no encontró ninguna criatura enemiga que destruir.`, who);
+      } else if (!SELF_EXPLAINED_FAILURES.includes(bc.type)) {
+        addLog(`⚠️ Grito/Hechizo: el efecto de ${nameTag} no tuvo ningún resultado.`, who);
+      }
+    } else if (bc.type === 'DAMAGE_TARGET') {
       addLog(`💥 Grito/Hechizo: ${nameTag} infligió ${bc.val} de daño a ${targetName}.`, who);
     } else if (bc.type === 'DESTROY_TARGET_CREATURE') {
-      addLog(`💀 Grito/Hechizo: ${nameTag} destruyó a ${targetName}.`, who);
+      // El ESCUDO absorbe la destrucción: la criatura sigue en el tablero.
+      if (targetObj && targetObj.card && targetObj.card.hp > 0) {
+        addLog(`🛡️ Grito/Hechizo: ${nameTag} solo rompió el ESCUDO de ${targetName}.`, who);
+      } else {
+        addLog(`💀 Grito/Hechizo: ${nameTag} destruyó a ${targetName}.`, who);
+      }
     } else if (bc.type === 'DAMAGE_SELF_HIVE') {
       addLog(`🩸 Grito/Hechizo: ${nameTag} sacrificó ${bc.val || 1} HP de su propio Reino.`, who);
     } else if (bc.type === 'SUMMON_RANDOM_FROM_HAND') {
@@ -705,20 +766,13 @@ async function executeBattlecryAsync(who, battlecry) {
       addLog(`🃏 Grito/Hechizo: ${nameTag} robó ${bc.val || 1} carta(s) de su mazo.`, who);
     }
 
-    if (targetObj) {
-      let targetEl = null;
-      if (targetObj.isHive) {
-        targetEl = document.getElementById(isPlayer ? 'enemy-hive' : 'player-hive');
-      } else if (targetObj.card) {
-        targetEl = document.querySelector(`[data-inst="${targetObj.card.instanceId}"]`);
-      }
-      if (targetEl) {
-        spawnFloatingText(targetEl, bc.type === 'DESTROY_TARGET_CREATURE' ? "💀 DESTRUIDO" : `-${bc.val}`);
-      }
-    }
-
+    // El número flotante lo dibuja el propio efecto, colgado de la carta que tocó.
+    // render() reconstruye esos nodos, así que primero se muda el flotante al overlay.
+    liftFloatingTextsToOverlay();
     render();
     await sleep(250);
+
+    await drainEffectSummonQueue(who);
   }
 
   await checkDeathsAsync();
@@ -831,9 +885,9 @@ async function attackTarget(targetType, targetId) {
 
 
 
-  const enemyHasTaunt = gameState.enemy.board.some(c => c.keywords.includes("PROVOCAR"));
+  const enemyHasTaunt = gameState.enemy.board.some(c => (c.keywords || []).includes("PROVOCAR"));
 
-  const attackerHasFlying = attacker.keywords.includes("VUELO");
+  const attackerHasFlying = (attacker.keywords || []).includes("VUELO");
 
 
 
@@ -853,7 +907,7 @@ async function attackTarget(targetType, targetId) {
 
     if (!defender) return;
 
-    if (enemyHasTaunt && !defender.keywords.includes("PROVOCAR") && !attackerHasFlying) {
+    if (enemyHasTaunt && !(defender.keywords || []).includes("PROVOCAR") && !attackerHasFlying) {
 
       addLog("¡Debes atacar a una carta con PROVOCAR!", "system");
 
@@ -875,7 +929,16 @@ async function handleAttackAction(payload) {
   const defenderWho = payload.who === 'player' ? 'enemy' : 'player';
   const instinctTriggered = await checkHandInstinctTriggers(defenderWho, 'ATTACK', { attackerInstId: payload.attackerInstId });
   if (instinctTriggered) {
+    // Un ataque cancelado por Instinto igual gasta la acción del atacante en este turno.
+    const cancelledBoard = payload.who === 'player' ? gameState.player.board : gameState.enemy.board;
+    const cancelledAttacker = cancelledBoard.find(c => c.instanceId === payload.attackerInstId);
+    if (cancelledAttacker) {
+      cancelledAttacker.attacksLeft = Math.max(0, (cancelledAttacker.attacksLeft || 1) - 1);
+      cancelledAttacker.canAttack = cancelledAttacker.attacksLeft > 0;
+    }
+    if (payload.who === 'player') gameState.selectedAttacker = null;
     addLog(`🛡️ El ataque de la criatura fue cancelado por la reacción de Instinto.`, payload.who);
+    render();
     return;
   }
 
@@ -905,7 +968,7 @@ async function handleAttackAction(payload) {
 
   const attackTrapIdx = defenderTraps.findIndex(t => t.trigger === 'ATTACK');
 
-  if (attackTrapIdx !== -1) {
+  if (attackTrapIdx !== -1 && typeof triggerTrapEffect === 'function') {
 
     const trap = defenderTraps.splice(attackTrapIdx, 1)[0];
 
@@ -928,8 +991,6 @@ async function handleAttackAction(payload) {
 
 
   if (targetType === 'HIVE') {
-
-    if (isLocal) gameState.enemy.hp -= attacker.attack; else gameState.player.hp -= attacker.attack;
 
     attacker.attacksLeft = Math.max(0, (attacker.attacksLeft || 1) - 1);
 
@@ -959,6 +1020,8 @@ async function handleAttackAction(payload) {
 
     await animatePhysicalSlide(attackerEl, targetHiveEl, () => {
 
+      if (isLocal) gameState.enemy.hp -= attacker.attack; else gameState.player.hp -= attacker.attack;
+
       spawnFloatingText(targetHiveEl, `-${attacker.attack}`);
 
     });
@@ -967,15 +1030,21 @@ async function handleAttackAction(payload) {
 
     // === ACTIVACIÓN DE TRAMPA DE DAÑO A COLMENA ===
 
-    const hiveDamagedTrapIdx = defenderTraps.findIndex(t => t.trigger === 'HIVE_DAMAGED');
+    const hiveDamagedTrapIdx = defenderTraps.findIndex(t => t.trigger === 'DAMAGE_HIVE');
 
-    if (hiveDamagedTrapIdx !== -1) {
+    if (hiveDamagedTrapIdx !== -1 && typeof triggerTrapEffect === 'function') {
 
       const trap = defenderTraps.splice(hiveDamagedTrapIdx, 1)[0];
 
       await triggerTrapEffect(isLocal ? 'enemy' : 'player', trap, { isHive: true, player: isLocal ? gameState.enemy : gameState.player, element: targetHiveEl });
 
     }
+
+
+
+    // Revisar si el defensor tiene un INSTINTO en mano para DAMAGE_HIVE
+
+    await checkHandInstinctTriggers(defenderWho, 'DAMAGE_HIVE', { attackerInstId: attacker.instanceId });
 
 
 
@@ -1023,7 +1092,7 @@ async function handleAttackAction(payload) {
 
         spawnFloatingText(defenderEl, "🛡️ ESCUDO ROTO", true);
 
-      } else if (attacker.keywords.includes("VENENO")) {
+      } else if ((attacker.keywords || []).includes("VENENO")) {
 
         defender.hp = 0;
 
@@ -1045,7 +1114,7 @@ async function handleAttackAction(payload) {
 
         spawnFloatingText(attackerEl, "🛡️ ESCUDO ROTO", true);
 
-      } else if (defender.keywords.includes("VENENO")) {
+      } else if ((defender.keywords || []).includes("VENENO")) {
 
         attacker.hp = 0;
 
@@ -1217,6 +1286,8 @@ async function checkDeathsAsync() {
 
 function checkWinCondition() {
 
+  if (gameState.isGameOver) return;
+
   if (gameState.player.hp <= 0) {
 
     gameState.isGameOver = true;
@@ -1309,6 +1380,15 @@ function handleSyncStateAction(payload) {
 
 async function runAiTurn() {
 
+  const myGeneration = gameGeneration;
+
+  const myMode = gameMode;
+
+  // El turno pertenece a la partida que lo lanzó: si arrancó otra (initGame, o el salto a una
+  // partida online) nada de lo que quede en vuelo de este debe tocar el tablero.
+
+  const aborted = () => gameGeneration !== myGeneration || gameMode !== myMode;
+
   try {
 
     const p = gameState.enemy;
@@ -1319,11 +1399,19 @@ async function runAiTurn() {
 
     // INICIO DEL TURNO DE LA IA: Rampa de Néctar, robar carta y activar criaturas en campo
 
-    p.maxNectar = Math.min(10, p.maxNectar + 1);
+    // En su primer turno no rampa ni roba, igual que el turno 1 del jugador.
 
-    p.nectar = p.maxNectar;
+    if (gameState.enemyHasStartedTurn) {
 
-    drawCard('enemy');
+      p.maxNectar = Math.min(10, p.maxNectar + 1);
+
+      p.nectar = p.maxNectar;
+
+      drawCard('enemy');
+
+    }
+
+    gameState.enemyHasStartedTurn = true;
 
     p.board.forEach(c => {
 
@@ -1343,7 +1431,7 @@ async function runAiTurn() {
 
     await sleep(1200);
 
-
+    if (aborted()) return;
 
 
 
@@ -1353,13 +1441,15 @@ async function runAiTurn() {
 
     const spellHandIdx = p.hand.findIndex(c => c.isSpell && !c.isInstinct && !c.isTrap && c.cost <= p.nectar);
 
-    if (spellHandIdx !== -1) {
+    if (spellHandIdx !== -1 && !gameState.isGameOver) {
 
       const card = p.hand.splice(spellHandIdx, 1)[0];
 
       p.nectar -= card.cost;
 
       showSpellCardPopup(card, 'enemy'); render(); await sleep(1000);
+
+      if (aborted()) return;
 
       addLog(`✨ Oponente lanzó el Hechizo [${card.name}].`, "enemy");
 
@@ -1371,9 +1461,13 @@ async function runAiTurn() {
 
       if (card.battlecry) await executeBattlecryAsync('enemy', card.battlecry);
 
+      if (aborted()) return;
+
       render();
 
       await sleep(1200);
+
+      if (aborted()) return;
 
     }
 
@@ -1383,7 +1477,7 @@ async function runAiTurn() {
 
     const affordableExtraIdx = p.extraDeck.findIndex(c => c.cost <= p.nectar);
 
-    if (affordableExtraIdx !== -1 && p.board.length < 6) {
+    if (affordableExtraIdx !== -1 && p.board.length < 6 && !gameState.isGameOver) {
 
       const card = p.extraDeck.splice(affordableExtraIdx, 1)[0];
 
@@ -1417,7 +1511,7 @@ async function runAiTurn() {
 
         hasShield: hasShield,
 
-        canAttack: card.keywords.includes("PRISA"),
+        canAttack: (card.keywords || []).includes("PRISA"),
 
         isNewSummon: true
 
@@ -1432,16 +1526,22 @@ async function runAiTurn() {
         }, 300);
         render(); await sleep(isAiBoss ? 900 : 750);
 
+      if (aborted()) return;
+
       addLog(`👑 ¡Enemigo invocó al Comandante Leyenda [${card.name}]!`, "enemy");
 
       showBanner(`👑 ¡COMANDANTE ENEMIGO: ${card.name.toUpperCase()}!`);
 
       if (card.battlecry) await executeBattlecryAsync('enemy', card.battlecry);
 
+      if (aborted()) return;
+
 
 
       // Revisar si el jugador tiene un INSTINTO en mano para SUMMON
       await checkHandInstinctTriggers('player', 'SUMMON', { summonedInstId: boardCard.instanceId });
+
+      if (aborted()) return;
 
 
 
@@ -1449,13 +1549,15 @@ async function runAiTurn() {
 
       await sleep(1200);
 
+      if (aborted()) return;
+
     }
 
 
 
     let playable = true;
 
-    while (playable && p.board.length < 6) {
+    while (playable && p.board.length < 6 && !gameState.isGameOver) {
 
       p.hand.sort((a, b) => b.cost - a.cost);
 
@@ -1499,7 +1601,7 @@ async function runAiTurn() {
 
           hasShield: hasShield,
 
-          canAttack: card.keywords.includes("PRISA"),
+          canAttack: (card.keywords || []).includes("PRISA"),
 
           isNewSummon: true
 
@@ -1516,6 +1618,8 @@ async function runAiTurn() {
         }, 300);
         render(); await sleep(isAiBoss ? 900 : 750);
 
+        if (aborted()) return;
+
         addLog(`⚔️ Enemigo invocó a [${card.name}] al campo.`, "enemy");
 
         showBanner(`🤖 ¡ENEMIGO INVOCÓ: ${card.name.toUpperCase()}!`);
@@ -1526,12 +1630,16 @@ async function runAiTurn() {
 
           await executeBattlecryAsync('enemy', card.battlecry);
 
+          if (aborted()) return;
+
         }
 
 
 
         // Revisar si el jugador tiene un INSTINTO en mano para SUMMON
         await checkHandInstinctTriggers('player', 'SUMMON', { summonedInstId: boardCard.instanceId });
+
+        if (aborted()) return;
 
 
 
@@ -1540,6 +1648,8 @@ async function runAiTurn() {
         setTimeout(() => { boardCard.isNewSummon = false; }, 600);
 
         await sleep(1200);
+
+        if (aborted()) return;
 
       } else {
 
@@ -1555,30 +1665,41 @@ async function runAiTurn() {
 
     await sleep(1200);
 
+    if (aborted()) return;
 
 
-    const attackers = p.board.filter(c => c.canAttack);
 
-    for (let attacker of attackers) {
+    // Se re-elige atacante en cada vuelta: DOBLE_ATAQUE deja canAttack en true tras el primer golpe.
 
-      if (gameState.isGameOver) break;
+    while (!gameState.isGameOver) {
+
+      const attacker = p.board.find(c => c.canAttack);
+
+      if (!attacker) break;
+
+      const attacksLeftBefore = attacker.attacksLeft;
 
 
 
       // Revisar si el jugador tiene un INSTINTO en mano para ATTACK
       const instinctTriggered = await checkHandInstinctTriggers('player', 'ATTACK', { attackerInstId: attacker.instanceId });
+      if (aborted()) return;
       if (instinctTriggered) {
+        // Un ataque cancelado por Instinto igual gasta la acción del atacante en este turno.
+        attacker.attacksLeft = Math.max(0, (attacker.attacksLeft || 1) - 1);
+        attacker.canAttack = attacker.attacksLeft > 0;
         addLog(`🛡️ El ataque de la criatura enemiga fue cancelado por tu Instinto.`, "player");
         await checkDeathsAsync();
+        if (aborted()) return;
         render();
         continue;
       }
 
 
 
-      const playerHasTaunt = gameState.player.board.some(c => c.keywords.includes("PROVOCAR"));
+      const playerHasTaunt = gameState.player.board.some(c => (c.keywords || []).includes("PROVOCAR"));
 
-      const attackerHasFlying = attacker.keywords.includes("VUELO");
+      const attackerHasFlying = (attacker.keywords || []).includes("VUELO");
 
 
 
@@ -1586,7 +1707,7 @@ async function runAiTurn() {
 
       if (playerHasTaunt && !attackerHasFlying) {
 
-        targets = gameState.player.board.filter(c => c.keywords.includes("PROVOCAR"));
+        targets = gameState.player.board.filter(c => (c.keywords || []).includes("PROVOCAR"));
 
       } else {
 
@@ -1610,6 +1731,8 @@ async function runAiTurn() {
 
           await animatePhysicalSlide(attackerEl, pHiveEl, () => {
 
+            if (aborted()) return;
+
             spawnFloatingText(pHiveEl, `-${attacker.attack}`);
 
             gameState.player.hp -= attacker.attack;
@@ -1624,8 +1747,12 @@ async function runAiTurn() {
 
 
 
+          if (aborted()) return;
+
           // Revisar si el jugador tiene un INSTINTO en mano para DAMAGE_HIVE
           await checkHandInstinctTriggers('player', 'DAMAGE_HIVE', { attackerInstId: attacker.instanceId });
+
+          if (aborted()) return;
 
         } else {
 
@@ -1633,13 +1760,15 @@ async function runAiTurn() {
 
           await animatePhysicalSlide(attackerEl, defenderEl, () => {
 
+            if (aborted()) return;
+
             if (target.hasShield) {
 
               target.hasShield = false;
 
               spawnFloatingText(defenderEl, "🛡️ ESCUDO ROTO", true);
 
-            } else if (attacker.keywords.includes("VENENO")) {
+            } else if ((attacker.keywords || []).includes("VENENO")) {
 
               target.hp = 0;
 
@@ -1661,7 +1790,7 @@ async function runAiTurn() {
 
               spawnFloatingText(attackerEl, "🛡️ ESCUDO ROTO", true);
 
-            } else if (target.keywords.includes("VENENO")) {
+            } else if ((target.keywords || []).includes("VENENO")) {
 
               attacker.hp = 0;
 
@@ -1689,13 +1818,29 @@ async function runAiTurn() {
 
 
 
+        if (aborted()) return;
+
         await checkDeathsAsync();
+
+        if (aborted()) return;
 
         checkWinCondition();
 
         render();
 
         await sleep(1200);
+
+        if (aborted()) return;
+
+      }
+
+
+
+      // Si el atacante no gastó ataque en esta vuelta, se retira para no repetirla eternamente.
+
+      if (attacker.canAttack && attacker.attacksLeft === attacksLeftBefore) {
+
+        attacker.canAttack = false;
 
       }
 
@@ -1709,13 +1854,71 @@ async function runAiTurn() {
 
   } finally {
 
-    if (!gameState.isGameOver) {
+    if (!aborted() && !gameState.isGameOver) {
 
       startTurn('player');
 
     }
 
   }
+
+}
+
+
+
+// Capa fija fuera del tablero: lo que cuelga de acá sobrevive a render().
+
+function getFloatingTextOverlay() {
+
+  let overlay = document.getElementById('floating-text-overlay');
+
+  if (!overlay) {
+
+    overlay = document.createElement('div');
+
+    overlay.id = 'floating-text-overlay';
+
+    overlay.style.cssText = 'position:fixed; inset:0; pointer-events:none; z-index:900;';
+
+    document.body.appendChild(overlay);
+
+  }
+
+  return overlay;
+
+}
+
+
+
+// Los flotantes cuelgan de la carta que los provocó, y render() rehace el tablero con innerHTML.
+
+// Mudarlos al overlay, congelados en la posición de pantalla que tenían, los deja terminar su
+
+// animación aunque su carta ya no exista.
+
+function liftFloatingTextsToOverlay() {
+
+  const overlay = getFloatingTextOverlay();
+
+  document.querySelectorAll('.board-row .floating-damage, .board-row .floating-heal, .board-row .floating-status-banner').forEach(floatEl => {
+
+    const host = floatEl.parentElement;
+
+    if (!host) return;
+
+    const hostRect = host.getBoundingClientRect();
+
+    const computed = window.getComputedStyle(floatEl);
+
+    floatEl.style.position = 'fixed';
+
+    floatEl.style.left = (hostRect.left + (parseFloat(computed.left) || 0)) + 'px';
+
+    floatEl.style.top = (hostRect.top + (parseFloat(computed.top) || 0)) + 'px';
+
+    overlay.appendChild(floatEl);
+
+  });
 
 }
 
@@ -2103,6 +2306,8 @@ function render() {
 
           if (!isMyTurn) showBanner("⏳ ¡ESPERA TU TURNO!");
 
+          else playCard(index);
+
         };
 
       }
@@ -2119,7 +2324,7 @@ function render() {
 
   const enemyHiveEl = document.getElementById('enemy-hive');
 
-  const enemyHasTaunt = gameState.enemy.board.some(c => c.keywords.includes("PROVOCAR"));
+  const enemyHasTaunt = gameState.enemy.board.some(c => (c.keywords || []).includes("PROVOCAR"));
 
   let selectedAttackerObj = null;
 
@@ -2135,7 +2340,7 @@ function render() {
 
   if (enemyHiveEl) {
 
-    if (isMyTurn && selectedAttackerObj && (!enemyHasTaunt || selectedAttackerObj.keywords.includes("VUELO")) && !gameState.isAnimating) {
+    if (isMyTurn && selectedAttackerObj && (!enemyHasTaunt || (selectedAttackerObj.keywords || []).includes("VUELO")) && !gameState.isAnimating) {
 
       enemyHiveEl.classList.add('targetable');
 
@@ -2246,11 +2451,31 @@ function render() {
 
           cardEl.ondragstart = (e) => {
 
+            // El handler se enganchó en el render anterior: desde entonces el turno pudo cambiar
+
+            // o pudo arrancar una animación.
+
+            if (gameState.turn !== 'PLAYER' || gameState.isGameOver || gameState.isAnimating || !card.canAttack) {
+
+              e.preventDefault();
+
+              return;
+
+            }
+
             e.dataTransfer.setData('text/plain', card.instanceId);
 
             e.dataTransfer.effectAllowed = 'copyMove';
 
-            selectAttacker(card.instanceId);
+            // render() reconstruye el tablero con innerHTML: si corre ahora destruye el nodo
+
+            // que se está arrastrando y el navegador aborta el drag. Se difiere al siguiente ciclo.
+
+            gameState.selectedAttacker = card.instanceId;
+
+            removeBadges();
+
+            setTimeout(() => render(), 0);
 
           };
 
@@ -2297,9 +2522,9 @@ function render() {
 
       if (isMyTurn && selectedAttackerObj && !gameState.isAnimating) {
 
-        const isTaunt = card.keywords.includes("PROVOCAR");
+        const isTaunt = (card.keywords || []).includes("PROVOCAR");
 
-        const canTarget = !enemyHasTaunt || isTaunt || selectedAttackerObj.keywords.includes("VUELO");
+        const canTarget = !enemyHasTaunt || isTaunt || (selectedAttackerObj.keywords || []).includes("VUELO");
 
         if (canTarget) classes += ' valid-target';
 
@@ -2355,9 +2580,9 @@ function render() {
 
 
 
-          const isAttPoison = attacker.keywords.includes("VENENO");
+          const isAttPoison = (attacker.keywords || []).includes("VENENO");
 
-          const isDefPoison = card.keywords.includes("VENENO");
+          const isDefPoison = (card.keywords || []).includes("VENENO");
 
 
 
@@ -2552,7 +2777,7 @@ function showStoryVictoryModal(chapter, unlockedNames, hasNext) {
   const overlay = document.getElementById('modal-overlay');
   const modalTitle = document.getElementById('modal-title');
   const modalText = document.getElementById('modal-text');
-  const modalContent = document.querySelector('.end-modal-content');
+  const modalContent = overlay ? overlay.querySelector('.modal-content') : null;
 
   if (modalTitle) {
     modalTitle.textContent = `🏆 ¡${chapter.title.toUpperCase()} COMPLETADO!`;
@@ -2631,6 +2856,8 @@ function showEndModal(title, text, type) {
 
 function restartGame() {
 
+  window.resetEffectSummonQueue();
+
   const modalOverlay = document.getElementById('modal-overlay');
 
   if (modalOverlay) modalOverlay.style.display = 'none';
@@ -2638,6 +2865,8 @@ function restartGame() {
   const logContainer = document.getElementById('log-container');
 
   if (logContainer) logContainer.innerHTML = '';
+
+  if (typeof closeP2pConnection === 'function') closeP2pConnection();
 
   const lobbyOverlay = document.getElementById('lobby-overlay');
 
@@ -2649,7 +2878,7 @@ function restartGame() {
 
 window.onload = () => {
 
-  initGame();
+  applyStoredPlayerAvatar();
 
 };
 
@@ -2741,7 +2970,7 @@ document.addEventListener('mouseover', function (e) {
 });
 
 document.addEventListener('mouseout', function (e) {
-  const cardEl = e.target.closest('.card-item, .hand-card, .extra-card, .db-catalog-card, .db-card-item');
+  const cardEl = e.target.closest('.log-card-link, .card-item, .hand-card, .extra-card, .db-catalog-card, .db-card-item');
   if (cardEl) {
     const globalTooltip = document.getElementById('global-card-tooltip');
     if (globalTooltip) {
@@ -2765,8 +2994,8 @@ async function triggerRemoteInstinctP2p(packet) {
   if (!packet || !packet.cardObj) return;
 
   const card = packet.cardObj;
-  const isPlayerOwner = packet.instinctWho === (gameMode === 'ONLINE_HOST' ? 'host' : 'guest');
-  const who = isPlayerOwner ? 'player' : 'enemy';
+  // instinctWho viene con la perspectiva del emisor: su 'player' es nuestro 'enemy'.
+  const who = packet.instinctWho === 'player' ? 'enemy' : 'player';
   const defender = gameState[who];
 
   // Remover la carta de la mano si aún está presente en la vista remota
@@ -2785,11 +3014,22 @@ async function triggerRemoteInstinctP2p(packet) {
     isPlayer: who === 'player'
   };
 
+  const remoteContext = packet.contextObj || {};
+  let targetObj = null;
+  const targetInstId = remoteContext.attackerInstId || remoteContext.summonedInstId;
+  if (targetInstId && context.opponent && context.opponent.board) {
+    const targetCard = context.opponent.board.find(c => c.instanceId === targetInstId);
+    if (targetCard) {
+      targetObj = { card: targetCard, element: document.querySelector(`[data-inst="${targetInstId}"]`) };
+    }
+  }
+
   if (card.battlecry && typeof executeRegisteredEffect === 'function') {
     const bcList = Array.isArray(card.battlecry) ? card.battlecry : [card.battlecry];
     for (let bc of bcList) {
-      executeRegisteredEffect(bc.type, context, null, bc.val);
+      executeRegisteredEffect(bc.type, context, targetObj, bc.val);
     }
+    await drainEffectSummonQueue(who);
   }
 
   if (defender) {
@@ -2809,6 +3049,13 @@ let currentPlayerAvatar = localStorage.getItem('feral_wars_avatar') || '🐝';
 
 function getSelectedPlayerAvatar() {
   return currentPlayerAvatar;
+}
+
+// Sin nada guardado se respeta el avatar que trae el HTML.
+function applyStoredPlayerAvatar() {
+  if (!localStorage.getItem('feral_wars_avatar')) return;
+  const pHive = document.getElementById('player-hive');
+  if (pHive) pHive.textContent = currentPlayerAvatar;
 }
 
 function openAvatarSelectModal() {
@@ -2833,49 +3080,31 @@ function selectPlayerAvatar(avatarEmoji) {
 }
 
 
-// === POPUP EMERGENTE CON DESVANECIMIENTO SUAVE PARA CARTAS DE INSTINTO ===
-function showInstinctCardPopup(card, who = 'player') {
-  if (!card) return;
-
-  const overlay = document.createElement('div');
-  overlay.className = 'instinct-card-popup-overlay';
-
-  const cardContainer = document.createElement('div');
-  cardContainer.className = 'instinct-card-popup-content';
-  cardContainer.style.backgroundImage = `url('${card.image || ''}')`;
-
-  const isPlayer = who === 'player';
-  const badgeText = isPlayer ? `🧠⚡ ¡INSTINTO ACTIVADO: ${card.name ? card.name.toUpperCase() : 'REACCIÓN'}!` : `🧠⚡ ¡INSTINTO ENEMIGO: ${card.name ? card.name.toUpperCase() : 'REACCIÓN'}!`;
-
-  cardContainer.innerHTML = `
-    <div class="instinct-popup-badge">
-      ${badgeText}
-    </div>
-  `;
-
-  overlay.appendChild(cardContainer);
-  document.body.appendChild(overlay);
-
-  setTimeout(() => {
-    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-  }, 1500);
-}
-
-
-
-
 
 // === MANEJADORES ACCIÓN PLAY_CARD Y PLAY_EXTRA_CARD ===
 async function handlePlayCardAction(payload) {
-  const { who, handIndex, cardObj } = payload;
+  const { who, handIndex, cardObj, isLocal } = payload;
   const p = gameState[who];
   const opp = gameState[who === 'player' ? 'enemy' : 'player'];
 
-  const card = (p.hand && p.hand[handIndex]) || cardObj;
+  // handIndex se calculó al hacer click; un Instinto que saltó de la mano pudo correrlo desde entonces.
+  let handPos = -1;
+  if (p.hand && cardObj) {
+    handPos = p.hand.indexOf(cardObj);
+  } else if (p.hand && handIndex !== undefined && handIndex >= 0) {
+    handPos = handIndex;
+  }
+
+  const card = (handPos !== -1 ? p.hand[handPos] : null) || cardObj;
   if (!card) return;
 
-  if (p.hand && handIndex !== undefined && handIndex >= 0) {
-    p.hand.splice(handIndex, 1);
+  if (!card.isSpell && !card.isTrap && p.board.length >= 6) {
+    addLog(`El tablero de ${who === 'player' ? "Jugador" : "Oponente"} está lleno (Máx. 6 criaturas).`, "system");
+    return;
+  }
+
+  if (p.hand && handPos !== -1) {
+    p.hand.splice(handPos, 1);
   }
 
   p.nectar -= card.cost;
@@ -2920,7 +3149,7 @@ async function handlePlayCardAction(payload) {
     setTimeout(() => { boardCard.isNewSummon = false; }, 600);
   }
 
-  if (typeof sendP2pPacket === 'function' && (gameMode === 'ONLINE_HOST' || gameMode === 'ONLINE_GUEST')) {
+  if (isLocal && typeof sendP2pPacket === 'function' && (gameMode === 'ONLINE_HOST' || gameMode === 'ONLINE_GUEST')) {
     sendP2pPacket({ type: 'PLAY_CARD', card: card, handIndex: handIndex });
   }
 
@@ -2928,11 +3157,16 @@ async function handlePlayCardAction(payload) {
 }
 
 async function handlePlayExtraCardAction(payload) {
-  const { who, extraIndex, cardObj } = payload;
+  const { who, extraIndex, cardObj, isLocal } = payload;
   const p = gameState[who];
 
   const card = (p.extraDeck && p.extraDeck[extraIndex]) || cardObj;
   if (!card) return;
+
+  if (p.board.length >= 6) {
+    addLog(`El tablero de ${who === 'player' ? "Jugador" : "Oponente"} está lleno (Máx. 6 criaturas).`, "system");
+    return;
+  }
 
   if (p.extraDeck && extraIndex !== undefined && extraIndex >= 0) {
     p.extraDeck.splice(extraIndex, 1);
@@ -2967,7 +3201,7 @@ async function handlePlayExtraCardAction(payload) {
   const defenderWho = who === 'player' ? 'enemy' : 'player';
   await checkHandInstinctTriggers(defenderWho, 'SUMMON', { summonedInstId: boardCard.instanceId });
 
-  if (typeof sendP2pPacket === 'function' && (gameMode === 'ONLINE_HOST' || gameMode === 'ONLINE_GUEST')) {
+  if (isLocal && typeof sendP2pPacket === 'function' && (gameMode === 'ONLINE_HOST' || gameMode === 'ONLINE_GUEST')) {
     sendP2pPacket({ type: 'PLAY_EXTRA_CARD', card: card, extraIndex: extraIndex });
   }
 

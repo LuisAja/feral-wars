@@ -24,7 +24,7 @@
   <title>Feral Wars - TCG PC Multijugador</title>
   <link rel="stylesheet" href="styles.css">
   <!-- PEERJS PARA CONEXIÓN P2P ONLINE SIN SERVIDOR -->
-  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <script defer src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
 
 <body>
@@ -91,7 +91,7 @@
         </div>
 
         <!-- ZONA DE TUS TRAMPAS OCULTAS -->
-        <div class="traps-container" id="player-traps" title="Tus Trampas Ocultas Activadas"></div>
+        <div class="traps-container" id="player-traps" title="Tus Trampas Ocultas Pendientes"></div>
 
         <!-- CARTAS EN MANO -->
         <div class="hand-container" id="player-hand"></div>
@@ -122,6 +122,10 @@
 
       <!-- CONTENIDO REGISTRO DE BATALLA -->
       <div id="panel-log" class="tab-content active">
+        <div class="log-header-controls">
+          <span>Registro de batalla</span>
+          <button class="btn-log-scroll" id="btn-log-scroll-toggle" onclick="toggleLogAutoScroll()">🔒 Auto-scroll: ON</button>
+        </div>
         <div class="log-container" id="log-container"></div>
         <div class="emote-bar">
           <button class="btn-emote" onclick="sendEmote('🐝 ¡Por la Colmena!')">🐝</button>
@@ -137,25 +141,25 @@
             <span class="glossary-icon">🏛️</span>
             <div>
               <div class="glossary-title">DECK EXTRA (Comandantes)</div>
-              <div class="glossary-desc">Tienes de 3 a 5 **Comandantes Leyenda** a la izquierda a los que puedes acceder
-                e invocar cuando tengas el Néctar.</div>
+              <div class="glossary-desc">Tienes de 3 a 5 <strong>Comandantes Leyenda</strong> a la izquierda a los que
+                puedes acceder e invocar cuando tengas el Néctar.</div>
             </div>
           </div>
 
           <div class="glossary-item">
             <span class="glossary-icon">⚔️</span>
             <div>
-              <div class="glossary-title">DOBLE ATAQUE (Double Attack)</div>
-              <div class="glossary-desc">La criatura puede **atacar 2 veces** en un mismo turno.</div>
+              <div class="glossary-title">DOBLE ATAQUE (Windfury)</div>
+              <div class="glossary-desc">La criatura puede <strong>atacar 2 veces</strong> en un mismo turno.</div>
             </div>
           </div>
 
           <div class="glossary-item">
             <span class="glossary-icon">⚡</span>
             <div>
-              <div class="glossary-title">PRISA (Haste)</div>
-              <div class="glossary-desc">La criatura puede **atacar inmediatamente** en el mismo turno en que entra al
-                campo.</div>
+              <div class="glossary-title">PRISA (Charge)</div>
+              <div class="glossary-desc">La criatura puede <strong>atacar inmediatamente</strong> en el mismo turno en
+                que entra al campo.</div>
             </div>
           </div>
 
@@ -163,8 +167,8 @@
             <span class="glossary-icon">🛡️</span>
             <div>
               <div class="glossary-title">PROVOCAR (Taunt)</div>
-              <div class="glossary-desc">El enemigo **debe atacar a esta criatura** antes de poder atacar a la Colmena u
-                otras cartas.</div>
+              <div class="glossary-desc">El enemigo <strong>debe atacar a esta criatura</strong> antes de poder atacar a
+                la Colmena u otras cartas.</div>
             </div>
           </div>
 
@@ -172,8 +176,8 @@
             <span class="glossary-icon">🦅</span>
             <div>
               <div class="glossary-title">VUELO (Flying)</div>
-              <div class="glossary-desc">Ignora a los enemigos con Provocar y puede **atacar directamente a la
-                Colmena**.</div>
+              <div class="glossary-desc">Ignora a los enemigos con Provocar y puede <strong>atacar directamente a la
+                Colmena</strong>.</div>
             </div>
           </div>
 
@@ -181,8 +185,17 @@
             <span class="glossary-icon">☠️</span>
             <div>
               <div class="glossary-title">VENENO (Poisonous)</div>
-              <div class="glossary-desc">Cualquier cantidad de daño que inflija a una criatura enemiga la **destruye
-                instantáneamente**.</div>
+              <div class="glossary-desc">Cualquier cantidad de daño que inflija a una criatura enemiga la
+                <strong>destruye instantáneamente</strong>.</div>
+            </div>
+          </div>
+
+          <div class="glossary-item">
+            <span class="glossary-icon">🛡️✨</span>
+            <div>
+              <div class="glossary-title">ESCUDO (Divine Shield)</div>
+              <div class="glossary-desc">Absorbe el <strong>primer impacto de daño</strong> que reciba la criatura, sin
+                perder HP.</div>
             </div>
           </div>
 
@@ -190,8 +203,8 @@
             <span class="glossary-icon">🍏</span>
             <div>
               <div class="glossary-title">GRITO DE GUERRA</div>
-              <div class="glossary-desc">Efecto especial e inmediato que se activa **al jugar la carta** (ej. cura la
-                colmena o daña un objetivo).</div>
+              <div class="glossary-desc">Efecto especial e inmediato que se activa <strong>al jugar la carta</strong>
+                (ej. cura la colmena o daña un objetivo).</div>
             </div>
           </div>
         </div>
@@ -219,7 +232,7 @@
         <button class="btn-lobby-mode story-btn"
           style="border-color: var(--accent-gold); color: var(--accent-gold); box-shadow: 0 0 15px rgba(243, 156, 18, 0.3);"
           onclick="startStoryMode()">
-          📜 MODO HISTORIA (CAPÍTULO 1)
+          📜 MODO HISTORIA (CAMPAÑA)
         </button>
 
 
@@ -272,6 +285,7 @@
         <div class="db-filter-group">
           <span>Coste:</span>
           <button class="db-filter-cost active" data-cost="ALL" onclick="setCostFilter('ALL')">TODOS</button>
+          <button class="db-filter-cost" data-cost="0" onclick="setCostFilter('0')">0</button>
           <button class="db-filter-cost" data-cost="1" onclick="setCostFilter('1')">1</button>
           <button class="db-filter-cost" data-cost="2" onclick="setCostFilter('2')">2</button>
           <button class="db-filter-cost" data-cost="3" onclick="setCostFilter('3')">3</button>
@@ -289,6 +303,7 @@
           <button class="db-filter-kw" data-kw="PROVOCAR" onclick="setKeywordFilter('PROVOCAR')">🛡️ PROVOCAR</button>
           <button class="db-filter-kw" data-kw="VUELO" onclick="setKeywordFilter('VUELO')">🦅 VUELO</button>
           <button class="db-filter-kw" data-kw="VENENO" onclick="setKeywordFilter('VENENO')">☠️ VENENO</button>
+          <button class="db-filter-kw" data-kw="ESCUDO" onclick="setKeywordFilter('ESCUDO')">🛡️✨ ESCUDO</button>
           <button class="db-filter-kw" data-kw="GRITO" onclick="setKeywordFilter('GRITO')">🍏 GRITO</button>
         </div>
 
@@ -318,9 +333,11 @@
             <option value="ALL">TODOS</option>
             <option value="Guerrero">Guerrero</option>
             <option value="Tirador">Tirador</option>
-            <option value="Chaman">Chamán</option>
+            <option value="Chamán">Chamán</option>
+            <option value="Mago">Mago</option>
             <option value="Luchador">Luchador</option>
             <option value="Bandido">Bandido</option>
+            <option value="Zombi">Zombi</option>
             <option value="Normal">Normal</option>
           </select>
         </div>
@@ -395,24 +412,6 @@
       initGame();
     }
   </script>
-
-  <!-- MODAL DE SELECCIÓN DE CAPÍTULOS DEL MODO HISTORIA -->
-  <div id="story-select-modal" class="modal-overlay" style="display: none; z-index: 280;">
-    <div class="modal-content" style="max-width: 550px; border-color: var(--accent-gold);">
-      <h2 style="color: var(--accent-gold); text-align: center; margin-bottom: 15px;">📜 SELECCIONAR CAPÍTULO</h2>
-      <div id="story-chapter-list"
-        style="display: flex; flex-direction: column; gap: 12px; max-height: 400px; overflow-y: auto;">
-        <!-- Insertado dinámicamente -->
-      </div>
-      <div style="text-align: center; margin-top: 20px;">
-        <button class="btn-lobby-mode" style="background: rgba(231, 76, 60, 0.2); border-color: var(--accent-red);"
-          onclick="closeStoryChapterSelect()">
-          ✖ VOLVER AL MENÚ
-        </button>
-      </div>
-    </div>
-  </div>
-
 
   <!-- MODAL MANUAL DE JUEGO (DENTRO DE FERAL WARS) -->
   <div id="game-manual-modal" class="modal-overlay" style="display: none; z-index: 310;">
