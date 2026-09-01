@@ -36,9 +36,11 @@
 
 
 
-      <!-- BARRAS DE JUGADOR ENEMIGO -->
+      <!-- BARRAS DE JUGADOR ENEMIGO (CENTRADA) -->
       <div class="player-bar enemy-bar">
-        <div class="player-info">
+        <div class="enemy-bar-left" style="flex: 1;"></div>
+
+        <div class="player-info enemy-center-info" style="flex: 2; display: flex; justify-content: center; align-items: center;">
           <div class="hive-avatar" id="enemy-hive" title="Colmena Enemiga (Haz clic para atacar)">
             🐝
           </div>
@@ -53,11 +55,10 @@
           </div>
         </div>
 
-        <!-- ZONA DE TRAMPAS ENEMIGAS -->
-        <div class="traps-container" id="enemy-traps" title="Trampas Enemigas Ocultas"></div>
-
-        <div class="nectar-container">
-          💧 Néctar: <span id="enemy-nectar">1 / 1</span>
+        <div class="enemy-bar-right" style="flex: 1; display: flex; justify-content: flex-end; align-items: center;">
+          <div class="nectar-container">
+            💧 Néctar: <span id="enemy-nectar">1 / 1</span>
+          </div>
         </div>
       </div>
 

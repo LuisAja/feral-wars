@@ -538,26 +538,151 @@ body {
 }
 
 /* ANIMATIONS */
-.anim-summon {
-  animation: summonFlash 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+/* INVOCACIÓN TITÁNICA / JEFES (COSTO >= 5) */
+.anim-boss-summon,
+.card-item.anim-boss-summon,
+.card-item.ready-to-attack.anim-boss-summon {
+  animation: bossCardSlamDown 0.85s cubic-bezier(0.2, 1, 0.3, 1) forwards !important;
+  z-index: 250 !important;
 }
 
-@keyframes summonFlash {
+@keyframes bossCardSlamDown {
   0% {
-    transform: scale(0.2) translateY(50px);
-    filter: brightness(2.5) drop-shadow(0 0 25px #2ecc71);
-    opacity: 0;
+    transform: translateY(-160px) scale(2.85);
+    box-shadow: 0 65px 55px rgba(0, 0, 0, 0.95), 0 0 60px rgba(241, 196, 15, 1), 0 0 100px rgba(230, 126, 34, 0.8);
+    opacity: 0.92;
+    filter: brightness(2.0) drop-shadow(0 0 35px #f1c40f);
   }
 
-  60% {
-    transform: scale(1.15) translateY(-5px);
-    filter: brightness(1.5) drop-shadow(0 0 15px #2ecc71);
+  45% {
+    transform: translateY(-40px) scale(1.9);
+    box-shadow: 0 35px 30px rgba(0, 0, 0, 0.8), 0 0 45px rgba(241, 196, 15, 0.9);
     opacity: 1;
   }
 
+  68% {
+    transform: translateY(0) scale(0.86);
+    filter: brightness(3.5) drop-shadow(0 0 50px #ffffff);
+    box-shadow: 0 0 50px rgba(255, 255, 255, 1), 0 0 80px rgba(241, 196, 15, 1);
+  }
+
+  84% {
+    transform: translateY(-14px) scale(1.12);
+  }
+
   100% {
-    transform: scale(1) translateY(0);
+    transform: translateY(0) scale(1);
     filter: brightness(1);
+    box-shadow: none;
+  }
+}
+
+/* GRAN TERREMOTO DE TABLERO PARA JEFES */
+.board-slam-shake-heavy {
+  animation: boardEarthquakeHeavy 1s ease-out !important;
+}
+
+@keyframes boardEarthquakeHeavy {
+  0% {
+    transform: translate(0, 0);
+  }
+
+  15% {
+    transform: translate(-12px, 14px) scale(1.025);
+  }
+
+  30% {
+    transform: translate(12px, -12px) scale(0.985);
+  }
+
+  45% {
+    transform: translate(-8px, 9px) scale(1.015);
+  }
+
+  60% {
+    transform: translate(8px, -6px);
+  }
+
+  75% {
+    transform: translate(-4px, 3px);
+  }
+
+  90% {
+    transform: translate(3px, -2px);
+  }
+
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+/* ANIMACIÓN SLAM / IMPACTO AL INVOCAR CRIATURA (MEJORADA 2.2X Y PRIORIDAD ABSOLUTA) */
+.anim-summon,
+.card-item.anim-summon,
+.card-item.ready-to-attack.anim-summon {
+  animation: cardSlamDown 0.72s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
+  z-index: 150 !important;
+}
+
+@keyframes cardSlamDown {
+  0% {
+    transform: translateY(-130px) scale(2.2);
+    box-shadow: 0 55px 45px rgba(0, 0, 0, 0.9), 0 0 40px rgba(46, 204, 113, 0.95);
+    opacity: 0.9;
+    filter: brightness(1.8);
+  }
+
+  40% {
+    transform: translateY(-35px) scale(1.6);
+    box-shadow: 0 30px 25px rgba(0, 0, 0, 0.7), 0 0 30px rgba(46, 204, 113, 0.8);
+    opacity: 1;
+  }
+
+  68% {
+    transform: translateY(0) scale(0.90);
+    filter: brightness(2.4) drop-shadow(0 0 35px #f1c40f);
+    box-shadow: 0 0 35px rgba(241, 196, 15, 1);
+  }
+
+  84% {
+    transform: translateY(-10px) scale(1.06);
+  }
+
+  100% {
+    transform: translateY(0) scale(1);
+    filter: brightness(1);
+    box-shadow: none;
+  }
+}
+
+/* SACUDIDA SÍSMICA DEL TABLERO AL IMPACTAR LA CARTA O ATAQUE */
+.board-slam-shake {
+  animation: boardSlamImpact 0.38s ease-out !important;
+}
+
+@keyframes boardSlamImpact {
+  0% {
+    transform: translate(0, 0);
+  }
+
+  20% {
+    transform: translate(-7px, 8px) scale(1.012);
+  }
+
+  40% {
+    transform: translate(7px, -7px) scale(0.992);
+  }
+
+  60% {
+    transform: translate(-4px, 4px);
+  }
+
+  80% {
+    transform: translate(3px, -2px);
+  }
+
+  100% {
+    transform: translate(0, 0) scale(1);
   }
 }
 
@@ -1546,6 +1671,7 @@ body {
     opacity: 0;
   }
 }
+
 /* TOOLTIP GLOBAL FLOTANTE EN BODY (SIN CLIP Y PRECISO AL 100%) */
 #global-card-tooltip {
   position: fixed;
@@ -1688,7 +1814,8 @@ body {
   transition: all 0.2s ease;
 }
 
-.avatar-option:hover, .avatar-option.selected {
+.avatar-option:hover,
+.avatar-option.selected {
   border-color: var(--accent-gold);
   background: rgba(243, 156, 18, 0.25);
   transform: scale(1.1);
@@ -1748,21 +1875,25 @@ body {
     opacity: 0;
     filter: brightness(2);
   }
+
   25% {
     transform: scale(1.12) translateY(0);
     opacity: 1;
     filter: brightness(1.2);
   }
+
   30% {
     transform: scale(1.0) translateY(0);
     opacity: 1;
     filter: brightness(1);
   }
+
   75% {
     transform: scale(1.0) translateY(0);
     opacity: 1;
     filter: brightness(1);
   }
+
   100% {
     transform: scale(1.08) translateY(-35px);
     opacity: 0;

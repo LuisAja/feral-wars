@@ -17,6 +17,21 @@ function getUnlockedCards() {
   return starters;
 }
 
+function unlockSpecificCards(cardIds) {
+  if (!Array.isArray(cardIds) || cardIds.length === 0 || typeof CARD_DATABASE === 'undefined') return [];
+  const current = getUnlockedCards();
+  let newlyUnlockedNames = [];
+  cardIds.forEach(id => {
+    const cardDef = CARD_DATABASE.find(c => c.id === id);
+    if (cardDef && !current.includes(id)) {
+      current.push(id);
+      newlyUnlockedNames.push(cardDef.name);
+    }
+  });
+  localStorage.setItem('feral_wars_unlocked_cards', JSON.stringify(current));
+  return newlyUnlockedNames;
+}
+
 function unlockFactionCards(factionName) {
   if (!factionName || typeof CARD_DATABASE === 'undefined') return;
   const current = getUnlockedCards();

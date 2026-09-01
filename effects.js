@@ -19,6 +19,19 @@ const EFFECTS_REGISTRY = {
     return true;
   },
 
+  // 🩸 Infligir daño o sacrificar vida del propio Reino/Colmena
+  DAMAGE_SELF_HIVE: (ctx, target, val) => {
+    const amount = val || 1;
+    ctx.player.hp = Math.max(0, ctx.player.hp - amount);
+    const hiveEl = document.getElementById(ctx.isPlayer ? 'player-hive' : 'enemy-hive');
+    if (hiveEl) {
+      hiveEl.classList.add('anim-shake');
+      createFloatingText(hiveEl, `-${amount}`, 'damage');
+      setTimeout(() => { if (hiveEl) hiveEl.classList.remove('anim-shake'); }, 400);
+    }
+    return true;
+  },
+
   // Restaurar vida a la Colmena
   HEAL_HIVE: (ctx, target, val) => {
     ctx.player.hp = Math.min(30, ctx.player.hp + val);

@@ -1908,7 +1908,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/00Buho.png",
+    "image": "assets/cards/00buho.png",
     "battlecry": [
       {
         "type": "DAMAGE_TARGET",
@@ -1930,7 +1930,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/01Buho.png",
+    "image": "assets/cards/01buho.png",
     "battlecry": [
       {
         "type": "DAMAGE_ALL_ENEMIES",
@@ -1952,7 +1952,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/02Buho.png",
+    "image": "assets/cards/02buho.png",
     "battlecry": {
       "type": "DESTROY_TARGET_CREATURE",
       "val": 1
@@ -1968,7 +1968,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/03Buho.png",
+    "image": "assets/cards/03buho.png",
     "battlecry": [
       {
         "type": "DRAW_CARD",
@@ -1990,7 +1990,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/04Buho.png",
+    "image": "assets/cards/04buho.png",
     "battlecry": {
       "type": "GAIN_NECTAR",
       "val": 2
@@ -2006,7 +2006,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/05Buho.png",
+    "image": "assets/cards/05buho.png",
     "battlecry": {
       "type": "REVIVE_RANDOM_CREATURE",
       "val": 1
@@ -2022,7 +2022,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/06Buitre.png",
+    "image": "assets/cards/06buitre.png",
     "battlecry": {
       "type": "HEAL_HIVE",
       "val": 5
@@ -2038,7 +2038,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/07Buitre.png",
+    "image": "assets/cards/07buitre.png",
     "battlecry": {
       "type": "REVIVE_RANDOM_CREATURE",
       "val": 1
@@ -2054,7 +2054,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/08Buitre.png",
+    "image": "assets/cards/08buitre.png",
     "battlecry": [
       {
         "type": "HEAL_ALL_FRIENDLIES",
@@ -2076,7 +2076,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/09Buitre.png",
+    "image": "assets/cards/09buitre.png",
     "battlecry": [
       {
         "type": "REVIVE_RANDOM_CREATURE",
@@ -2115,7 +2115,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/27Dinos.png",
+    "image": "assets/cards/27dinos.png",
     "battlecry": {
       "type": "HEAL_ALL_FRIENDLIES",
       "val": 3
@@ -2131,7 +2131,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/28Dinos.png",
+    "image": "assets/cards/28dinos.png",
     "battlecry": {
       "type": "BUFF_ALL_FRIENDLIES_ATK",
       "val": 2
@@ -2147,7 +2147,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/29Dinos.png",
+    "image": "assets/cards/29dinos.png",
     "battlecry": {
       "type": "DAMAGE_TARGET",
       "val": 4
@@ -2163,7 +2163,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/30Dinos.png",
+    "image": "assets/cards/30dinos.png",
     "battlecry": {
       "type": "SEARCH_DECK",
       "val": "Dinosaurio"
@@ -2179,7 +2179,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/33Insecto.png",
+    "image": "assets/cards/33insecto.png",
     "battlecry": {
       "type": "BUFF_ALL_FRIENDLIES_ATK",
       "val": 2
@@ -2195,7 +2195,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/32Insecto.png",
+    "image": "assets/cards/32insecto.png",
     "battlecry": {
       "type": "HEAL_HIVE",
       "val": 5
@@ -2211,7 +2211,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/31Insecto.png",
+    "image": "assets/cards/31insecto.png",
     "battlecry": {
       "type": "BUFF_ALL_FRIENDLIES_ATK",
       "val": 1
@@ -2227,7 +2227,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/34Insecto.png",
+    "image": "assets/cards/34insecto.png",
     "battlecry": {
       "type": "HEAL_HIVE",
       "val": 4
@@ -2243,7 +2243,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/35Insecto.png",
+    "image": "assets/cards/35insecto.png",
     "battlecry": {
       "type": "DAMAGE_ENEMY_HIVE",
       "val": 6
@@ -2259,7 +2259,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/36Jabali.png",
+    "image": "assets/cards/36jabali.png",
     "battlecry": {
       "type": "BUFF_ALL_FRIENDLIES_ATK",
       "val": 2
@@ -2274,7 +2274,7 @@
     "cost": 2,
     "attack": 0,
     "hp": 0,
-    "image": "assets/cards/37Jabali.png",
+    "image": "assets/cards/37jabali.png",
     "description": "HECHIZO: Revive 1 criatura(s) aleatoria(s) del cementerio a tu campo.",
     "isSpell": true,
     "battlecry": {
@@ -2291,7 +2291,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/38Jabali.png",
+    "image": "assets/cards/38jabali.png",
     "battlecry": {
       "type": "DAMAGE_ALL_ENEMIES",
       "val": 3
@@ -2307,7 +2307,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/18Mapache.png",
+    "image": "assets/cards/18mapache.png",
     "battlecry": [
       {
         "type": "HEAL_ALL_FRIENDLIES",
@@ -2329,7 +2329,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/21Pulpo.png",
+    "image": "assets/cards/21pulpo.png",
     "battlecry": {
       "type": "DAMAGE_ALL_ENEMIES",
       "val": 2
@@ -2345,7 +2345,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/22Pulpo.png",
+    "image": "assets/cards/22pulpo.png",
     "battlecry": {
       "type": "DRAW_CARD",
       "val": 2
@@ -2361,7 +2361,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/23Pulpo.png",
+    "image": "assets/cards/23pulpo.png",
     "battlecry": {
       "type": "HEAL_HIVE",
       "val": 5
@@ -2377,7 +2377,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/24Tiburon.png",
+    "image": "assets/cards/24tiburon.png",
     "battlecry": [
       {
         "type": "DAMAGE_TARGET",
@@ -2399,7 +2399,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/25Tiburon.png",
+    "image": "assets/cards/25tiburon.png",
     "battlecry": {
       "type": "DESTROY_TARGET_CREATURE",
       "val": 1
@@ -2415,7 +2415,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/26Tiburon.png",
+    "image": "assets/cards/26tiburon.png",
     "battlecry": {
       "type": "DAMAGE_ENEMY_HIVE",
       "val": 4
@@ -2431,7 +2431,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/10Toro.png",
+    "image": "assets/cards/10toro.png",
     "battlecry": [
       {
         "type": "GAIN_NECTAR",
@@ -2453,7 +2453,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/11Toro.png",
+    "image": "assets/cards/11toro.png",
     "battlecry": {
       "type": "BUFF_ALL_FRIENDLIES_ATK",
       "val": 1
@@ -2469,7 +2469,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/12Toro.png",
+    "image": "assets/cards/12toro.png",
     "battlecry": {
       "type": "DAMAGE_TARGET",
       "val": 3
@@ -2484,7 +2484,7 @@
     "cost": 1,
     "attack": 0,
     "hp": 0,
-    "image": "assets/cards/15Tortuga.png",
+    "image": "assets/cards/15tortuga.png",
     "description": "HECHIZO: Otorga +1 de Ataque a todas tus criaturas aliadas.",
     "isSpell": true,
     "battlecry": {
@@ -2501,7 +2501,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/14Tortuga.png",
+    "image": "assets/cards/14tortuga.png",
     "battlecry": {
       "type": "HEAL_ALL_FRIENDLIES",
       "val": 4
@@ -2517,7 +2517,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/13Tortuga.png",
+    "image": "assets/cards/13tortuga.png",
     "battlecry": {
       "type": "HEAL_HIVE",
       "val": 5
@@ -2533,7 +2533,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/16Tortuga.png",
+    "image": "assets/cards/16tortuga.png",
     "battlecry": [
       {
         "type": "HEAL_HIVE",
@@ -2555,7 +2555,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/17Mapache.png",
+    "image": "assets/cards/17mapache.png",
     "isInstinct": true,
     "isStarter": true,
     "trigger": "ATTACK",
@@ -2573,7 +2573,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/19Mapache.png",
+    "image": "assets/cards/19mapache.png",
     "isInstinct": true,
     "isStarter": true,
     "trigger": "SUMMON",
@@ -2591,7 +2591,7 @@
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/20Mapache.png",
+    "image": "assets/cards/20mapache.png",
     "isInstinct": true,
     "isStarter": true,
     "trigger": "DAMAGE_HIVE",

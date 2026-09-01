@@ -1,3 +1,27 @@
+function triggerBoardSlamShakeHeavy() {
+  const battleContainer = document.querySelector('.battlefield-container') || document.querySelector('.board-zone') || document.getElementById('player-board');
+  if (battleContainer) {
+    battleContainer.classList.remove('board-slam-shake', 'board-slam-shake-heavy');
+    void battleContainer.offsetWidth;
+    battleContainer.classList.add('board-slam-shake-heavy');
+    setTimeout(() => {
+      if (battleContainer) battleContainer.classList.remove('board-slam-shake-heavy');
+    }, 500);
+  }
+}
+
+function triggerBoardSlamShake(who = 'player') {
+  const battleContainer = document.querySelector('.battlefield-container') || document.querySelector('.board-zone') || document.getElementById('player-board');
+  if (battleContainer) {
+    battleContainer.classList.remove('board-slam-shake');
+    void battleContainer.offsetWidth;
+    battleContainer.classList.add('board-slam-shake');
+    setTimeout(() => {
+      if (battleContainer) battleContainer.classList.remove('board-slam-shake');
+    }, 400);
+  }
+}
+
 
 function exitDuelToMenu() {
   if (confirm("¿Estás seguro de que deseas abandonar el Duelo y volver al Menú Principal?")) {
@@ -616,91 +640,89 @@ async function executeBattlecryAsync(who, battlecry) {
   const p = gameState[who];
   const opp = gameState[who === 'player' ? 'enemy' : 'player'];
   const isPlayer = who === 'player';
-
-  let targetObj = null;
-
-  // Asignación inteligente de objetivo por defecto si el efecto requiere un objetivo (ej. DAMAGE_TARGET)
-  if (!targetObj && (battlecry.type === 'DAMAGE_TARGET' || battlecry.type === 'DESTROY_TARGET_CREATURE')) {
-    if (opp.board && opp.board.length > 0) {
-      const targetCard = opp.board[0];
-      const targetEl = document.querySelector(`[data-inst="${targetCard.instanceId}"]`);
-      targetObj = { card: targetCard, element: targetEl };
-    } else {
-      const hiveEl = document.getElementById(isPlayer ? 'enemy-hive' : 'player-hive');
-      targetObj = { isHive: true, player: opp, element: hiveEl };
-    }
-  }
-
-  const context = {
-    player: p,
-    opponent: opp,
-    isPlayer: isPlayer
-  };
-
-  if (typeof executeRegisteredEffect === 'function') {
-    executeRegisteredEffect(battlecry.type, context, targetObj, battlecry.val, battlecry);
-  }
-
-  const targetName = targetObj ? (targetObj.isHive ? "el Reino Enemigo" : `[${targetObj.card ? targetObj.card.name : 'Criatura'}]`) : "el objetivo";
-
-
-
   const nameTag = isPlayer ? "Jugador" : "Oponente";
 
-  if (battlecry.type === 'DAMAGE_TARGET') {
+  const bcList = Array.isArray(battlecry) ? battlecry : [battlecry];
 
-    addLog(`💥 Grito/Hechizo: ${nameTag} infligió ${battlecry.val} de daño a ${targetName}.`, who);
+  for (let bc of bcList) {
+    if (!bc || !bc.type) continue;
 
-  } else if (battlecry.type === 'DESTROY_TARGET_CREATURE') {
+    let targetObj = null;
 
-    addLog(`💀 Grito/Hechizo: ${nameTag} destruyó a ${targetName}.`, who);
-
-  } else if (battlecry.type === 'SUMMON_RANDOM_FROM_HAND') {
-    addLog(`🃏 Grito/Hechizo: ${nameTag} invocó una criatura aleatoria directamente de su mano.`, who);
-  } else if (battlecry.type === 'BUFF_ALL_FRIENDLIES_HP' || battlecry.type === 'BUFF_ALL_FRIENDLIES_MAX_HP') {
-
-    addLog(`✨ Grito/Hechizo: ${nameTag} aumentó la salud máxima de todas sus criaturas en +${battlecry.val} HP.`, who);
-
-  }
-
-
-
-  render();
-
-
-
-  if (targetObj) {
-
-    let targetEl = null;
-
-    if (targetObj.isHive) {
-
-      targetEl = document.getElementById(isPlayer ? 'enemy-hive' : 'player-hive');
-
-    } else if (targetObj.card) {
-
-      targetEl = document.querySelector(`[data-inst="${targetObj.card.instanceId}"]`);
-
+    // Asignación inteligente de objetivo por defecto si el efecto requiere un objetivo (ej. DAMAGE_TARGET)
+    if (!targetObj && (bc.type === 'DAMAGE_TARGET' || bc.type === 'DESTROY_TARGET_CREATURE')) {
+      if (opp.board && opp.board.length > 0) {
+        const targetCard = opp.board[0];
+        const targetEl = document.querySelector(`[data-inst="${targetCard.instanceId}"]`);
+        targetObj = { card: targetCard, element: targetEl };
+      } else {
+        const hiveEl = document.getElementById(isPlayer ? 'enemy-hive' : 'player-hive');
+        targetObj = { isHive: true, player: opp, element: hiveEl };
+      }
     }
 
-    if (targetEl) {
+    const context = {
+      player: p,
+      opponent: opp,
+      isPlayer: isPlayer
+    };
 
-      spawnFloatingText(targetEl, battlecry.type === 'DESTROY_TARGET_CREATURE' ? "💀 DESTRUIDO" : `-${battlecry.val}`);
-
+    if (typeof executeRegisteredEffect === 'function') {
+      executeRegisteredEffect(bc.type, context, targetObj, bc.val, bc);
     }
 
+    const targetName = targetObj ? (targetObj.isHive ? "el Reino Enemigo" : `[${targetObj.card ? targetObj.card.name : 'Criatura'}]`) : "el objetivo";
+
+    if (bc.type === 'DAMAGE_TARGET') {
+      addLog(`💥 Grito/Hechizo: ${nameTag} infligió ${bc.val} de daño a ${targetName}.`, who);
+    } else if (bc.type === 'DESTROY_TARGET_CREATURE') {
+      addLog(`💀 Grito/Hechizo: ${nameTag} destruyó a ${targetName}.`, who);
+    } else if (bc.type === 'DAMAGE_SELF_HIVE') {
+      addLog(`🩸 Grito/Hechizo: ${nameTag} sacrificó ${bc.val || 1} HP de su propio Reino.`, who);
+    } else if (bc.type === 'SUMMON_RANDOM_FROM_HAND') {
+      addLog(`🃏 Grito/Hechizo: ${nameTag} invocó una criatura aleatoria directamente de su mano.`, who);
+    } else if (bc.type === 'BUFF_ALL_FRIENDLIES_HP' || bc.type === 'BUFF_ALL_FRIENDLIES_MAX_HP') {
+      addLog(`✨ Grito/Hechizo: ${nameTag} aumentó la salud máxima de todas sus criaturas en +${bc.val} HP.`, who);
+    } else if (bc.type === 'BUFF_ALL_FRIENDLIES_ATK') {
+      addLog(`⚔️ Grito/Hechizo: ${nameTag} aumentó el ataque de todas sus criaturas en +${bc.val} ATK.`, who);
+    } else if (bc.type === 'HEAL_HIVE') {
+      addLog(`💚 Grito/Hechizo: ${nameTag} restauró +${bc.val} HP a su Reino.`, who);
+    } else if (bc.type === 'HEAL_ALL_FRIENDLIES') {
+      addLog(`💚 Grito/Hechizo: ${nameTag} restauró +${bc.val} HP a todas sus criaturas.`, who);
+    } else if (bc.type === 'DAMAGE_ENEMY_HIVE') {
+      addLog(`🎯 Grito/Hechizo: ${nameTag} infligió ${bc.val} de daño directo al Reino enemigo.`, who);
+    } else if (bc.type === 'DAMAGE_ALL_ENEMIES') {
+      addLog(`💥 Grito/Hechizo: ${nameTag} infligió ${bc.val} de daño a todas las criaturas enemigas.`, who);
+    } else if (bc.type === 'GAIN_NECTAR') {
+      addLog(`💧 Grito/Hechizo: ${nameTag} obtuvo +${bc.val} de Néctar en este turno.`, who);
+    } else if (bc.type === 'PERMANENT_NECTAR') {
+      addLog(`🧪 Grito/Hechizo: ${nameTag} aumentó su límite máximo de Néctar en +${bc.val}.`, who);
+    } else if (bc.type === 'SEARCH_DECK') {
+      addLog(`🔍 Grito/Hechizo: ${nameTag} buscó en su mazo.`, who);
+    } else if (bc.type === 'REVIVE_RANDOM_CREATURE') {
+      addLog(`🔮 Grito/Hechizo: ${nameTag} revivió criaturas de su cementerio.`, who);
+    } else if (bc.type === 'DRAW_CARD') {
+      addLog(`🃏 Grito/Hechizo: ${nameTag} robó ${bc.val || 1} carta(s) de su mazo.`, who);
+    }
+
+    if (targetObj) {
+      let targetEl = null;
+      if (targetObj.isHive) {
+        targetEl = document.getElementById(isPlayer ? 'enemy-hive' : 'player-hive');
+      } else if (targetObj.card) {
+        targetEl = document.querySelector(`[data-inst="${targetObj.card.instanceId}"]`);
+      }
+      if (targetEl) {
+        spawnFloatingText(targetEl, bc.type === 'DESTROY_TARGET_CREATURE' ? "💀 DESTRUIDO" : `-${bc.val}`);
+      }
+    }
+
+    render();
+    await sleep(250);
   }
-
-
-
-  await sleep(400);
 
   await checkDeathsAsync();
-
   checkWinCondition();
-
-  return targetObj && targetObj.card ? targetObj.card.instanceId : null;
-
 }
 
 
@@ -734,88 +756,68 @@ function selectAttacker(instanceId) {
 
 
 function animatePhysicalSlide(attackerEl, targetEl, onImpactCallback) {
-
   return new Promise(resolve => {
-
     if (!attackerEl || !targetEl) {
-
       onImpactCallback();
-
       resolve();
-
       return;
-
     }
 
-
-
     gameState.isAnimating = true;
-
     const attRect = attackerEl.getBoundingClientRect();
-
     const tarRect = targetEl.getBoundingClientRect();
 
-
-
     const attCenterX = attRect.left + (attRect.width / 2);
-
     const attCenterY = attRect.top + (attRect.height / 2);
-
     const tarCenterX = tarRect.left + (tarRect.width / 2);
-
     const tarCenterY = tarRect.top + (tarRect.height / 2);
 
-
-
     const deltaX = tarCenterX - attCenterX;
-
     const deltaY = tarCenterY - attCenterY;
 
+    // Normalizar vector para la toma de carrera hacia atrás
+    const dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY) || 1;
+    const normX = deltaX / dist;
+    const normY = deltaY / dist;
+    const recoilX = -normX * 38;
+    const recoilY = -normY * 38;
 
+    attackerEl.style.zIndex = '200';
 
-    attackerEl.style.transition = 'transform 0.45s cubic-bezier(0.25, 1, 0.5, 1)';
-
-    attackerEl.style.zIndex = '150';
-
-    attackerEl.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(1.15)`;
-
-
+    // FASE 1: TOMA DE CARRERA ELEVADA HACIA ATRÁS (1.45X + SOMBRA PROFUNDA) (180ms)
+    attackerEl.style.transition = 'transform 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.18s ease-out';
+    attackerEl.style.boxShadow = '0 35px 25px rgba(0, 0, 0, 0.85), 0 0 25px rgba(241, 196, 15, 0.7)';
+    attackerEl.style.transform = `translate(${recoilX}px, ${recoilY}px) scale(1.45)`;
 
     setTimeout(() => {
-
-      targetEl.classList.add('anim-shake');
-
-      onImpactCallback();
-
-
+      // FASE 2: EMBESTIDA EXPLOSIVA Y VELOZ A TODA FUERZA (170ms)
+      attackerEl.style.transition = 'transform 0.17s cubic-bezier(0.55, 0.055, 0.675, 0.19), box-shadow 0.17s ease-out';
+      attackerEl.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(1.30)`;
 
       setTimeout(() => {
-
-        attackerEl.style.transform = 'translate(0px, 0px) scale(1)';
+        // FASE 3: CHOQUE, DAÑO Y SACUDIDA SÍSMICA DE TODO EL CAMPO (130ms)
+        targetEl.classList.add('anim-shake');
+        triggerBoardSlamShake();
+        onImpactCallback();
 
         setTimeout(() => {
+          // FASE 4: RETORNO SUAVE Y PAUSADO CON PESO HACIA SU CASILLA (430ms)
+          attackerEl.style.transition = 'transform 0.43s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.43s ease-out';
+          attackerEl.style.boxShadow = '';
+          attackerEl.style.transform = 'translate(0px, 0px) scale(1)';
 
-          attackerEl.style.transition = '';
-
-          attackerEl.style.zIndex = '';
-
-          targetEl.classList.remove('anim-shake');
-
-          gameState.isAnimating = false;
-
-          resolve();
-
-        }, 450);
-
-      }, 250);
-
-    }, 450);
-
+          setTimeout(() => {
+            attackerEl.style.transition = '';
+            attackerEl.style.zIndex = '';
+            targetEl.classList.remove('anim-shake');
+            gameState.isAnimating = false;
+            resolve();
+          }, 440);
+        }, 130);
+      }, 180);
+    }, 185);
   });
-
 }
-
-
 
 async function attackTarget(targetType, targetId) {
 
@@ -1222,11 +1224,21 @@ function checkWinCondition() {
     showEndModal("¡DERROTA!", "Tu colmena ha caído.", "loss");
 
   } else if (gameState.enemy.hp <= 0) {
-
     gameState.isGameOver = true;
-
-    showEndModal("¡VICTORIA!", "Has destruido la colmena enemiga.", "win");
-
+    if (gameMode === 'STORY_MODE' && typeof getCurrentStoryChapter === 'function') {
+      const ch = getCurrentStoryChapter();
+      let unlockedNames = [];
+      if (ch.rewardCardIds && typeof unlockSpecificCards === 'function') {
+        unlockedNames = unlockSpecificCards(ch.rewardCardIds);
+      }
+      const hasNext = (currentStoryChapterIndex + 1) < STORY_CHAPTERS.length;
+      if (hasNext) {
+        saveStoryProgress(currentStoryChapterIndex + 1);
+      }
+      showStoryVictoryModal(ch, unlockedNames, hasNext);
+    } else {
+      showEndModal("¡VICTORIA!", "Has destruido la colmena enemiga.", "win");
+    }
   }
 
 }
@@ -1413,7 +1425,12 @@ async function runAiTurn() {
 
       p.board.push(boardCard);
 
-      showSummonCardPopup(card, 'enemy'); render(); await sleep(900);
+      const isAiBoss = (card.cost || 0) >= 5;
+        setTimeout(() => {
+          if (isAiBoss) triggerBoardSlamShakeHeavy();
+          else triggerBoardSlamShake('enemy');
+        }, 300);
+        render(); await sleep(isAiBoss ? 900 : 750);
 
       addLog(`👑 ¡Enemigo invocó al Comandante Leyenda [${card.name}]!`, "enemy");
 
@@ -1492,7 +1509,12 @@ async function runAiTurn() {
 
         p.board.push(boardCard);
 
-        showSummonCardPopup(card, 'enemy'); render(); await sleep(900);
+        const isAiBoss = (card.cost || 0) >= 5;
+        setTimeout(() => {
+          if (isAiBoss) triggerBoardSlamShakeHeavy();
+          else triggerBoardSlamShake('enemy');
+        }, 300);
+        render(); await sleep(isAiBoss ? 900 : 750);
 
         addLog(`⚔️ Enemigo invocó a [${card.name}] al campo.`, "enemy");
 
@@ -2163,7 +2185,14 @@ function render() {
 
       if (card.hasShield) classes += ' has-shield';
 
-      if (card.isNewSummon) classes += ' anim-summon';
+      if (card.isNewSummon) {
+        if ((card.cost || 0) >= 5) {
+          classes += ' anim-boss-summon';
+        } else {
+          classes += ' anim-summon';
+        }
+        card.isNewSummon = false;
+      }
 
       if (isMyTurn && card.canAttack && !gameState.isAnimating) classes += ' ready-to-attack';
 
@@ -2255,7 +2284,14 @@ function render() {
 
       if (card.hasShield) classes += ' has-shield';
 
-      if (card.isNewSummon) classes += ' anim-summon';
+      if (card.isNewSummon) {
+        if ((card.cost || 0) >= 5) {
+          classes += ' anim-boss-summon';
+        } else {
+          classes += ' anim-summon';
+        }
+        card.isNewSummon = false;
+      }
 
 
 
@@ -2511,6 +2547,61 @@ function addLog(msg, type = "system") {
 }
 
 
+
+function showStoryVictoryModal(chapter, unlockedNames, hasNext) {
+  const overlay = document.getElementById('modal-overlay');
+  const modalTitle = document.getElementById('modal-title');
+  const modalText = document.getElementById('modal-text');
+  const modalContent = document.querySelector('.end-modal-content');
+
+  if (modalTitle) {
+    modalTitle.textContent = `🏆 ¡${chapter.title.toUpperCase()} COMPLETADO!`;
+    modalTitle.className = 'modal-title win';
+  }
+
+  let rewardHtml = '';
+  if (unlockedNames && unlockedNames.length > 0) {
+    rewardHtml = `<div style="margin-top:12px; padding:10px; background:rgba(46,204,113,0.15); border:1px solid var(--accent-green); border-radius:8px; font-size:0.95rem; color:#2ecc71;">
+      🎁 <strong>¡Nuevas Cartas Desbloqueadas!:</strong><br>${unlockedNames.map(n => `✨ [${n}]`).join('  ')}
+    </div>`;
+  } else {
+    rewardHtml = `<div style="margin-top:8px; color:#bdc3c7; font-size:0.9rem;">¡Has dominado este territorio!</div>`;
+  }
+
+  let buttonsHtml = '';
+  if (hasNext) {
+    const nextChapter = STORY_CHAPTERS[currentStoryChapterIndex + 1];
+    buttonsHtml = `
+      <div style="display:flex; gap:12px; justify-content:center; margin-top:20px;">
+        <button class="btn-lobby-mode" style="padding:10px 20px; font-size:1rem; border-color:var(--accent-green); background:rgba(46,204,113,0.2);" onclick="advanceToNextStoryChapter()">
+          ▶️ Continuar: ${nextChapter ? nextChapter.bossAvatar + ' ' + nextChapter.title : 'Siguiente Nivel'}
+        </button>
+        <button class="btn-lobby-mode" style="padding:10px 20px; font-size:1rem; border-color:var(--accent-gold);" onclick="restartGame()">
+          🏠 Salir al Menú
+        </button>
+      </div>`;
+  } else {
+    buttonsHtml = `
+      <div style="margin-top:15px; color:var(--accent-gold); font-size:1.1rem; font-weight:bold;">
+        👑 ¡FELICIDADES! ¡HAS COMPLETADO TODA LA CAMPAÑA DE FERAL WARS!
+      </div>
+      <div style="display:flex; justify-content:center; margin-top:20px;">
+        <button class="btn-lobby-mode" style="padding:10px 25px; font-size:1.05rem; border-color:var(--accent-gold);" onclick="restartGame()">
+          🏠 Volver al Inicio
+        </button>
+      </div>`;
+  }
+
+  if (modalText) {
+    modalText.innerHTML = `<div>Has derrotado a <strong>${chapter.bossAvatar} ${chapter.bossName}</strong>.</div>${rewardHtml}${buttonsHtml}`;
+  }
+
+  // Ocultar botón default de reiniciar si existe
+  const defaultRestartBtn = modalContent ? modalContent.querySelector('button:not(.btn-lobby-mode)') : null;
+  if (defaultRestartBtn) defaultRestartBtn.style.display = 'none';
+
+  if (overlay) overlay.style.display = 'flex';
+}
 
 function showEndModal(title, text, type) {
 
@@ -2813,7 +2904,12 @@ async function handlePlayCardAction(payload) {
     };
 
     p.board.push(boardCard);
-    showSummonCardPopup(card, who); render(); await sleep(900);
+    const isBossSummon = (card.cost || 0) >= 5;
+    setTimeout(() => {
+      if (isBossSummon) triggerBoardSlamShakeHeavy();
+      else triggerBoardSlamShake(who);
+    }, 300);
+    render(); await sleep(isBossSummon ? 900 : 750);
     addLog(`⚔️ ${who === 'player' ? "Jugador" : "Oponente"} invocó a [${card.name}] al campo.`, who);
 
     if (card.battlecry) await executeBattlecryAsync(who, card.battlecry);

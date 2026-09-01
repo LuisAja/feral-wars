@@ -17,7 +17,7 @@ const CARD_DATABASE = [
       "val": 2
     },
     "description": "COMANDANTE LEYENDA (Deck Extra). PRISA (Puede atacar inmediatamente en el turno que es invocada). GRITO DE GUERRA: Otorga +2 de Ataque a todas tus criaturas aliadas.",
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "s1_02",
@@ -34,7 +34,7 @@ const CARD_DATABASE = [
     },
     "description": "PRISA (Puede atacar inmediatamente en el turno que es invocada). GRITO DE GUERRA: Inflige 1 de daño al objetivo elegido.",
     "isExtra": false,
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "s1_03",
@@ -51,7 +51,7 @@ const CARD_DATABASE = [
     },
     "description": "GRITO DE GUERRA: Busca y roba León carta(s) de tu mazo.",
     "isExtra": false,
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "s1_04",
@@ -148,12 +148,16 @@ const CARD_DATABASE = [
       },
       {
         "type": "GAIN_NECTAR",
-        "val": 2
+        "val": 6
+      },
+      {
+        "type": "DAMAGE_SELF_HIVE",
+        "val": 8
       }
     ],
     "description": "VUELO (Puede ignorar criaturas con Provocar y atacar al Reino). GRITO DE GUERRA: Busca y roba HECHIZO carta(s) de tu mazo. GRITO DE GUERRA: Otorga +2 de Energía en este turno.",
     "isExtra": false,
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "s1_09",
@@ -169,17 +173,21 @@ const CARD_DATABASE = [
     ],
     "battlecry": [
       {
-        "type": "DRAW_CARD",
-        "val": 2
+        "type": "SEARCH_DECK",
+        "val": "HECHIZO"
       },
       {
         "type": "GAIN_NECTAR",
-        "val": 1
+        "val": 8
+      },
+      {
+        "type": "DAMAGE_SELF_HIVE",
+        "val": 8
       }
     ],
     "description": "VUELO (Puede ignorar criaturas con Provocar y atacar al Reino). GRITO DE GUERRA: Roba 2 carta(s) de tu mazo. GRITO DE GUERRA: Otorga +1 de Energía en este turno.",
     "isExtra": false,
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "s1_10",
@@ -194,13 +202,15 @@ const CARD_DATABASE = [
       "VUELO",
       "ESCUDO"
     ],
-    "battlecry": {
-      "type": "GAIN_NECTAR",
-      "val": 3
-    },
+    "battlecry": [
+      {
+        "type": "GAIN_NECTAR",
+        "val": 6
+      },
+    ],
     "description": "VUELO (Puede ignorar criaturas con Provocar y atacar al Reino). ESCUDO (Protege del primer impacto de daño). GRITO DE GUERRA: Otorga +4 de Energía en este turno.",
     "isExtra": false,
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "s1_11",
@@ -223,11 +233,15 @@ const CARD_DATABASE = [
       },
       {
         "type": "GAIN_NECTAR",
-        "val": 3
+        "val": 4
+      },
+      {
+        "type": "DAMAGE_SELF_HIVE",
+        "val": 8
       }
     ],
     "description": "COMANDANTE LEYENDA (Deck Extra). VUELO (Puede ignorar criaturas con Provocar y atacar al Reino). ESCUDO (Protege del primer impacto de daño). GRITO DE GUERRA: Roba 2 carta(s) de tu mazo. GRITO DE GUERRA: Otorga +2 de Energía en este turno.",
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "s1_12",
@@ -266,7 +280,7 @@ const CARD_DATABASE = [
     },
     "description": "VUELO (Puede ignorar criaturas con Provocar y atacar al Reino). GRITO DE GUERRA: Busca y roba Buitre carta(s) de tu mazo.",
     "isExtra": false,
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "s1_14",
@@ -283,7 +297,7 @@ const CARD_DATABASE = [
     },
     "description": "VUELO (Puede ignorar criaturas con Provocar y atacar al Reino). GRITO DE GUERRA: Restaura +2 de salud a todas tus criaturas aliadas.",
     "isExtra": false,
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "s1_15",
@@ -367,7 +381,7 @@ const CARD_DATABASE = [
       "val": 3
     },
     "description": "PROVOCAR (Los enemigos deben atacar a esta criatura primero). ESCUDO (Protege del primer impacto de daño). GRITO DE GUERRA: Aumenta la salud de todas tus criaturas aliadas en +3 HP.",
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "s1_19",
@@ -377,13 +391,13 @@ const CARD_DATABASE = [
     "subtype": "Guerrero",
     "cost": 1,
     "attack": 1,
-    "hp": 5,
+    "hp": 4,
     "keywords": [
       "PROVOCAR"
     ],
     "description": "PROVOCAR (Los enemigos deben atacar a esta criatura primero).",
     "isExtra": false,
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "s1_20",
@@ -395,12 +409,11 @@ const CARD_DATABASE = [
     "attack": 1,
     "hp": 4,
     "keywords": [
-      "PROVOCAR",
       "ESCUDO"
     ],
     "description": "PROVOCAR (Los enemigos deben atacar a esta criatura primero). ESCUDO (Protege del primer impacto de daño).",
     "isExtra": false,
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "s1_21",
@@ -433,7 +446,6 @@ const CARD_DATABASE = [
     "hp": 7,
     "keywords": [
       "PROVOCAR",
-      "ESCUDO"
     ],
     "description": "PROVOCAR (Los enemigos deben atacar a esta criatura primero). ESCUDO (Protege del primer impacto de daño).",
     "isExtra": false,
@@ -465,11 +477,10 @@ const CARD_DATABASE = [
     "name": "Defensor Valiente",
     "type": "Tortuga",
     "subtype": "Guerrero",
-    "cost": 6,
+    "cost": 7,
     "attack": 4,
     "hp": 9,
     "keywords": [
-      "PROVOCAR",
       "ESCUDO"
     ],
     "battlecry": {
@@ -548,7 +559,7 @@ const CARD_DATABASE = [
     ],
     "description": "PROVOCAR (Los enemigos deben atacar a esta criatura primero).",
     "isExtra": false,
-    "isStarter": false
+    "isStarter": true
   },
   {
     "id": "s1_29",
@@ -600,7 +611,7 @@ const CARD_DATABASE = [
     },
     "description": "PROVOCAR (Los enemigos deben atacar a esta criatura primero).",
     "isExtra": false,
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "s1_32",
@@ -618,7 +629,7 @@ const CARD_DATABASE = [
     },
     "description": "GRITO DE GUERRA: Inflige 2 de daño al objetivo elegido.",
     "isExtra": false,
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "s1_33",
@@ -715,7 +726,7 @@ const CARD_DATABASE = [
     },
     "description": "VUELO (Puede ignorar criaturas con Provocar y atacar al Reino). GRITO DE GUERRA: Restaura +4 de salud a tu Reino.",
     "isExtra": false,
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "s1_38",
@@ -735,7 +746,7 @@ const CARD_DATABASE = [
     },
     "description": "VUELO (Puede ignorar criaturas con Provocar y atacar al Reino). GRITO DE GUERRA: Inflige 3 de daño al objetivo elegido.",
     "isExtra": false,
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "s1_39",
@@ -752,7 +763,7 @@ const CARD_DATABASE = [
     ],
     "description": "VUELO (Puede ignorar criaturas con Provocar y atacar al Reino). PRISA (Puede atacar inmediatamente en el turno que es invocada).",
     "isExtra": false,
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "s1_40",
@@ -850,7 +861,7 @@ const CARD_DATABASE = [
     },
     "description": "VENENO (Destruye instantáneamente a cualquier criatura a la que dañe). GRITO DE GUERRA: Busca y roba VENENO carta(s) de tu mazo.",
     "isExtra": false,
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "s1_45",
@@ -923,7 +934,7 @@ const CARD_DATABASE = [
     },
     "description": "VENENO (Destruye instantáneamente a cualquier criatura a la que dañe). GRITO DE GUERRA: Inflige 2 de daño directo al Reino enemigo.",
     "isExtra": false,
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "s1_49",
@@ -943,7 +954,7 @@ const CARD_DATABASE = [
     },
     "description": "PRISA (Puede atacar inmediatamente en el turno que es invocada). GRITO DE GUERRA: Inflige 2 de daño al objetivo elegido.",
     "isExtra": false,
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "s1_50",
@@ -1003,7 +1014,7 @@ const CARD_DATABASE = [
     },
     "description": "ESCUDO (Protege del primer impacto de daño). GRITO DE GUERRA: Restaura +2 de salud a todas tus criaturas aliadas.",
     "isExtra": false,
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "s1_53",
@@ -1050,7 +1061,7 @@ const CARD_DATABASE = [
     },
     "description": "PRISA (Puede atacar inmediatamente en el turno que es invocada). GRITO DE GUERRA: Inflige 3 de daño directo al Reino enemigo.",
     "isExtra": false,
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "s1_55",
@@ -1224,7 +1235,7 @@ const CARD_DATABASE = [
     },
     "description": "VUELO (Puede ignorar criaturas con Provocar y atacar al Reino). GRITO DE GUERRA: Inflige 2 de daño al objetivo elegido.",
     "isExtra": false,
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "s1_65",
@@ -1244,7 +1255,7 @@ const CARD_DATABASE = [
     },
     "description": "VUELO (Puede ignorar criaturas con Provocar y atacar al Reino). GRITO DE GUERRA: Inflige 3 de daño directo al Reino enemigo.",
     "isExtra": false,
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "s1_66",
@@ -1270,7 +1281,7 @@ const CARD_DATABASE = [
     ],
     "description": "PRISA (Puede atacar inmediatamente en el turno que es invocada). GRITO DE GUERRA: Otorga +1 de Energía en este turno. GRITO DE GUERRA: Busca y roba Insecto carta(s) de tu mazo.",
     "isExtra": false,
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "s1_67",
@@ -1383,7 +1394,7 @@ const CARD_DATABASE = [
     "subtype": "Luchador",
     "isExtra": false,
     "hidden": true,
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "s1_73",
@@ -1399,7 +1410,7 @@ const CARD_DATABASE = [
     "type": "Primate",
     "subtype": "Luchador",
     "hidden": true,
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "s1_74",
@@ -1488,7 +1499,7 @@ const CARD_DATABASE = [
     "type": "Hyena",
     "subtype": "Bandido",
     "hidden": true,
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "s1_79",
@@ -1504,7 +1515,7 @@ const CARD_DATABASE = [
     "type": "Hyena",
     "subtype": "Bandido",
     "hidden": true,
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "s1_80",
@@ -1572,7 +1583,7 @@ const CARD_DATABASE = [
     },
     "description": "GRITO DE GUERRA: Busca y roba Dragon carta(s) de tu mazo.",
     "isExtra": false,
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "s1_84",
@@ -1722,7 +1733,7 @@ const CARD_DATABASE = [
     ],
     "description": "PRISA (Puede atacar inmediatamente en el turno que es invocada).",
     "isExtra": false,
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "s1_91",
@@ -1760,7 +1771,7 @@ const CARD_DATABASE = [
     },
     "description": "GRITO DE GUERRA: Restaura +4 de salud a tu Reino.",
     "isExtra": false,
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "s1_93",
@@ -1794,7 +1805,7 @@ const CARD_DATABASE = [
     ],
     "description": "PRISA (Puede atacar inmediatamente en el turno que es invocada).",
     "isExtra": false,
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "s1_95",
@@ -1867,21 +1878,25 @@ const CARD_DATABASE = [
     ],
     "description": "PRISA (Puede atacar inmediatamente en el turno que es invocada).",
     "isExtra": false,
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "sp_01",
     "name": "Sello Abrumador",
     "type": "Buho",
-    "cost": 4,
+    "cost": 7,
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/00Buho.png",
+    "image": "assets/cards/00buho.png",
     "battlecry": [
       {
         "type": "DAMAGE_TARGET",
         "val": 8
+      },
+      {
+        "type": "HEAL_HIVE",
+        "val": 7
       }
     ],
     "description": "HECHIZO: Inflige 3 de daño al objetivo elegido. HECHIZO: Busca y roba HECHIZO carta(s) de tu mazo.",
@@ -1891,19 +1906,19 @@ const CARD_DATABASE = [
     "id": "sp_02",
     "name": "Sello Destructivo",
     "type": "Buho",
-    "cost": 4,
+    "cost": 6,
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/01Buho.png",
+    "image": "assets/cards/01buho.png",
     "battlecry": [
       {
         "type": "DAMAGE_ALL_ENEMIES",
         "val": 4
       },
       {
-        "type": "GAIN_NECTAR",
-        "val": 1
+        "type": "HEAL_HIVE",
+        "val": 7
       }
     ],
     "description": "HECHIZO: Inflige 2 de daño a todas las criaturas enemigas. HECHIZO: Otorga +1 de Energía en este turno.",
@@ -1913,15 +1928,19 @@ const CARD_DATABASE = [
     "id": "sp_03",
     "name": "Sello Dominante",
     "type": "Buho",
-    "cost": 4,
+    "cost": 7,
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/02Buho.png",
-    "battlecry": {
+    "image": "assets/cards/02buho.png",
+    "battlecry": [{
       "type": "DESTROY_TARGET_CREATURE",
       "val": 2
     },
+    {
+      "type": "HEAL_HIVE",
+      "val": 7
+    }],
     "description": "HECHIZO: Destruye instantáneamente a una criatura enemiga al azar.",
     "isStarter": false
   },
@@ -1929,11 +1948,11 @@ const CARD_DATABASE = [
     "id": "sp_04",
     "name": "Sello Inspirador",
     "type": "Buho",
-    "cost": 2,
+    "cost": 6,
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/03Buho.png",
+    "image": "assets/cards/03buho.png",
     "battlecry": [
       {
         "type": "DRAW_CARD",
@@ -1942,40 +1961,54 @@ const CARD_DATABASE = [
       {
         "type": "BUFF_ALL_FRIENDLIES_ATK",
         "val": 5
+      },
+      {
+        "type": "HEAL_HIVE",
+        "val": 7
       }
     ],
     "description": "HECHIZO: Roba 2 carta(s) de tu mazo. HECHIZO: Otorga +1 de Ataque a todas tus criaturas aliadas.",
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "sp_05",
     "name": "Sello Mágico",
     "type": "Buho",
-    "cost": 1,
+    "cost": 7,
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/04Buho.png",
-    "battlecry": {
-      "type": "GAIN_NECTAR",
-      "val": 4
+    "image": "assets/cards/04buho.png",
+    "battlecry": [{
+      "type": "DAMAGE_ALL_ENEMIES",
+      "val": 6
     },
+    {
+      "type": "HEAL_HIVE",
+      "val": 7
+    }
+    ],
     "description": "HECHIZO: Otorga +2 de Energía en este turno.",
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "sp_06",
     "name": "Sello Renaciente",
     "type": "Buho",
-    "cost": 4,
+    "cost": 6,
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/05Buho.png",
-    "battlecry": {
+    "image": "assets/cards/05buho.png",
+    "battlecry": [{
       "type": "REVIVE_RANDOM_CREATURE",
       "val": 2
     },
+    {
+      "type": "HEAL_HIVE",
+      "val": 7
+    }
+    ],
     "description": "HECHIZO: Revive 1 criatura(s) aleatoria(s) del cementerio a tu campo.",
     "isStarter": false
   },
@@ -1987,13 +2020,13 @@ const CARD_DATABASE = [
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/06Buitre.png",
+    "image": "assets/cards/06buitre.png",
     "battlecry": {
       "type": "HEAL_HIVE",
       "val": 5
     },
     "description": "HECHIZO: Restaura +5 de salud a tu Reino.",
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "sp_08",
@@ -2003,7 +2036,7 @@ const CARD_DATABASE = [
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/07Buitre.png",
+    "image": "assets/cards/07buitre.png",
     "battlecry": {
       "type": "REVIVE_RANDOM_CREATURE",
       "val": 2
@@ -2019,7 +2052,7 @@ const CARD_DATABASE = [
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/08Buitre.png",
+    "image": "assets/cards/08buitre.png",
     "battlecry": [
       {
         "type": "HEAL_ALL_FRIENDLIES",
@@ -2041,7 +2074,7 @@ const CARD_DATABASE = [
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/09Buitre.png",
+    "image": "assets/cards/09buitre.png",
     "battlecry": [
       {
         "type": "REVIVE_RANDOM_CREATURE",
@@ -2070,7 +2103,7 @@ const CARD_DATABASE = [
     },
     "description": "HECHIZO: Otorga +1 de Ataque a todas tus criaturas aliadas.",
     "hidden": true,
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "sp_12",
@@ -2080,14 +2113,14 @@ const CARD_DATABASE = [
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/27Dinos.png",
+    "image": "assets/cards/27dinos.png",
     "isInstinct": true,
     "trigger": "ATTACK",
     "battlecry": {
       "type": "DESTROY_TARGET_CREATURE"
     },
     "description": "HECHIZO: Restaura +3 de salud a todas tus criaturas aliadas.",
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "sp_13",
@@ -2097,7 +2130,7 @@ const CARD_DATABASE = [
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/28Dinos.png",
+    "image": "assets/cards/28dinos.png",
     "battlecry": {
       "type": "DAMAGE_ENEMY_HIVE",
       "val": 5
@@ -2113,7 +2146,7 @@ const CARD_DATABASE = [
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/29Dinos.png",
+    "image": "assets/cards/29dinos.png",
     "battlecry": {
       "type": "DAMAGE_ALL_ENEMIES",
       "val": 4
@@ -2129,7 +2162,7 @@ const CARD_DATABASE = [
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/30Dinos.png",
+    "image": "assets/cards/30dinos.png",
     "battlecry": {
       "type": "SEARCH_DECK",
       "val": "Dinosaurio"
@@ -2145,7 +2178,7 @@ const CARD_DATABASE = [
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/33Insecto.png",
+    "image": "assets/cards/33insecto.png",
     "battlecry": {
       "type": "BUFF_ALL_FRIENDLIES_ATK",
       "val": 2
@@ -2161,7 +2194,7 @@ const CARD_DATABASE = [
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/32Insecto.png",
+    "image": "assets/cards/32insecto.png",
     "battlecry": {
       "type": "HEAL_HIVE",
       "val": 5
@@ -2177,7 +2210,7 @@ const CARD_DATABASE = [
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/31Insecto.png",
+    "image": "assets/cards/31insecto.png",
     "battlecry": {
       "type": "BUFF_ALL_FRIENDLIES_ATK",
       "val": 1
@@ -2193,13 +2226,13 @@ const CARD_DATABASE = [
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/34Insecto.png",
+    "image": "assets/cards/34insecto.png",
     "battlecry": {
       "type": "HEAL_HIVE",
       "val": 4
     },
     "description": "HECHIZO: Restaura +4 de salud a tu Reino.",
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "sp_20",
@@ -2209,7 +2242,7 @@ const CARD_DATABASE = [
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/35Insecto.png",
+    "image": "assets/cards/35insecto.png",
     "battlecry": {
       "type": "DAMAGE_ENEMY_HIVE",
       "val": 6
@@ -2225,7 +2258,7 @@ const CARD_DATABASE = [
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/36Jabali.png",
+    "image": "assets/cards/36jabali.png",
     "battlecry": {
       "type": "BUFF_ALL_FRIENDLIES_ATK",
       "val": 2
@@ -2240,14 +2273,14 @@ const CARD_DATABASE = [
     "cost": 2,
     "attack": 0,
     "hp": 0,
-    "image": "assets/cards/37Jabali.png",
+    "image": "assets/cards/37jabali.png",
     "description": "HECHIZO: Revive 1 criatura(s) aleatoria(s) del cementerio a tu campo.",
     "isSpell": true,
     "battlecry": {
       "type": "REVIVE_RANDOM_CREATURE",
       "val": 1
     },
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "sp_23",
@@ -2257,7 +2290,7 @@ const CARD_DATABASE = [
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/38Jabali.png",
+    "image": "assets/cards/38jabali.png",
     "battlecry": {
       "type": "DAMAGE_ALL_ENEMIES",
       "val": 3
@@ -2273,7 +2306,7 @@ const CARD_DATABASE = [
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/18Mapache.png",
+    "image": "assets/cards/18mapache.png",
     "battlecry": [
       {
         "type": "HEAL_ALL_FRIENDLIES",
@@ -2295,7 +2328,7 @@ const CARD_DATABASE = [
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/21Pulpo.png",
+    "image": "assets/cards/21pulpo.png",
     "battlecry": {
       "type": "DAMAGE_ALL_ENEMIES",
       "val": 2
@@ -2311,13 +2344,13 @@ const CARD_DATABASE = [
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/22Pulpo.png",
+    "image": "assets/cards/22pulpo.png",
     "battlecry": {
       "type": "DRAW_CARD",
       "val": 2
     },
     "description": "HECHIZO: Roba 2 carta(s) de tu mazo.",
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "sp_30",
@@ -2327,7 +2360,7 @@ const CARD_DATABASE = [
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/23Pulpo.png",
+    "image": "assets/cards/23pulpo.png",
     "battlecry": {
       "type": "HEAL_HIVE",
       "val": 5
@@ -2343,7 +2376,7 @@ const CARD_DATABASE = [
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/24Tiburon.png",
+    "image": "assets/cards/24tiburon.png",
     "battlecry": [
       {
         "type": "DAMAGE_TARGET",
@@ -2361,7 +2394,7 @@ const CARD_DATABASE = [
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/25Tiburon.png",
+    "image": "assets/cards/25tiburon.png",
     "battlecry": {
       "type": "DESTROY_TARGET_CREATURE",
       "val": 1
@@ -2377,7 +2410,7 @@ const CARD_DATABASE = [
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/26Tiburon.png",
+    "image": "assets/cards/26tiburon.png",
     "battlecry": {
       "type": "SUMMON_RANDOM_FROM_HAND",
       "maxCost": 5,
@@ -2394,7 +2427,7 @@ const CARD_DATABASE = [
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/10Toro.png",
+    "image": "assets/cards/10toro.png",
     "battlecry": [
       {
         "type": "GAIN_NECTAR",
@@ -2406,7 +2439,7 @@ const CARD_DATABASE = [
       }
     ],
     "description": "HECHIZO: Otorga +2 de Energía en este turno. HECHIZO: Roba 1 carta(s) de tu mazo.",
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "sp_35",
@@ -2416,7 +2449,7 @@ const CARD_DATABASE = [
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/11Toro.png",
+    "image": "assets/cards/11toro.png",
     "battlecry": {
       "type": "BUFF_ALL_FRIENDLIES_ATK",
       "val": 3
@@ -2432,7 +2465,7 @@ const CARD_DATABASE = [
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/12Toro.png",
+    "image": "assets/cards/12toro.png",
     "battlecry": {
       "type": "SUMMON_RANDOM_FROM_HAND",
       "maxCost": 5
@@ -2447,14 +2480,14 @@ const CARD_DATABASE = [
     "cost": 1,
     "attack": 0,
     "hp": 0,
-    "image": "assets/cards/15Tortuga.png",
+    "image": "assets/cards/15tortuga.png",
     "description": "HECHIZO: Otorga +1 de Ataque a todas tus criaturas aliadas.",
     "isSpell": true,
     "battlecry": {
       "type": "BUFF_ALL_FRIENDLIES_ATK",
       "val": 1
     },
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "sp_38",
@@ -2464,13 +2497,13 @@ const CARD_DATABASE = [
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/14Tortuga.png",
+    "image": "assets/cards/14tortuga.png",
     "battlecry": {
       "type": "HEAL_ALL_FRIENDLIES",
       "val": 4
     },
     "description": "HECHIZO: Restaura +4 de salud a todas tus criaturas aliadas.",
-    "isStarter": true
+    "isStarter": false
   },
   {
     "id": "sp_39",
@@ -2480,7 +2513,7 @@ const CARD_DATABASE = [
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/13Tortuga.png",
+    "image": "assets/cards/13tortuga.png",
     "battlecry": {
       "type": "HEAL_HIVE",
       "val": 5
@@ -2496,7 +2529,7 @@ const CARD_DATABASE = [
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/16Tortuga.png",
+    "image": "assets/cards/16tortuga.png",
     "battlecry": [
       {
         "type": "HEAL_HIVE",
@@ -2518,7 +2551,7 @@ const CARD_DATABASE = [
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/17Mapache.png",
+    "image": "assets/cards/17mapache.png",
     "isInstinct": true,
     "isStarter": true,
     "trigger": "ATTACK",
@@ -2536,7 +2569,7 @@ const CARD_DATABASE = [
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/19Mapache.png",
+    "image": "assets/cards/19mapache.png",
     "isInstinct": true,
     "isStarter": true,
     "trigger": "SUMMON",
@@ -2553,7 +2586,7 @@ const CARD_DATABASE = [
     "attack": 0,
     "hp": 0,
     "isSpell": true,
-    "image": "assets/cards/20Mapache.png",
+    "image": "assets/cards/20mapache.png",
     "isInstinct": true,
     "isStarter": true,
     "trigger": "ATTACK",
@@ -2625,6 +2658,7 @@ function getCardDescription(card) {
       else if (btype === 'BUFF_ALL_FRIENDLIES_HP' || btype === 'BUFF_ALL_FRIENDLIES_MAX_HP') descParts.push(`${prefix}Aumenta la salud de todas tus criaturas aliadas en +${val} HP.`);
       else if (btype === 'BUFF_ALL_FRIENDLIES_ATK') descParts.push(`${prefix}Otorga +${val} de Ataque a todas tus criaturas aliadas.`);
       else if (btype === 'HEAL_HIVE') descParts.push(`${prefix}Restaura +${val} de salud a tu Reino.`);
+      else if (btype === 'DAMAGE_SELF_HIVE') descParts.push(`${prefix}Inflige ${val} de daño a tu propio Reino.`);
       else if (btype === 'DAMAGE_ENEMY_HIVE') descParts.push(`${prefix}Inflige ${val} de daño directo al Reino enemigo.`);
       else if (btype === 'DAMAGE_ALL_ENEMIES') descParts.push(`${prefix}Inflige ${val} de daño a todas las criaturas enemigas.`);
       else if (btype === 'SEARCH_DECK') descParts.push(`${prefix}Busca y roba ${val} carta(s) de tu mazo.`);
